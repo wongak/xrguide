@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"xrguide/db/schema"
+	"xrguide/importing"
 )
 
 var dbFile = flag.String("db", "xrguide.db", "Database file.")
@@ -21,41 +23,15 @@ var verbose = flag.Bool("v", false, "Verbose output.")
 var lang = flag.Int64("l", 0, "Language Id. If not specified all.")
 var page = flag.Int64("p", 0, "Page Id. If not specified all.")
 
-var reset string = `
-DELETE FROM text_entries
-WHERE
-language_id = ?
-AND
-page_id = ?
-`
-var insert string = `
-INSERT INTO text_entries
-(language_id, page_id, text_id, text)
-VALUES
-(?, ?, ?, ?)
-`
-
 func main() {
 	flag.Parse()
-	err := backupDb(*dbFile)
+	err := importing.BackupDb(*dbFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	dbFileInfo, err := os.Stat(*dbFile)
-	if err != nil && !os.IsNotExist(err) {
-		log.Fatalf("Error on stat db: %v", err)
-	}
-	// force rebuild on new db
-	if os.IsNotExist(err) {
-		*rebuild = true
-	} else {
-		if dbFileInfo.IsDir() {
-			log.Fatalf("Db is a directory.")
-		}
-	}
-	db, err := sql.Open("sqlite3", *dbFile)
+	db, err := importing.OpenDb(*dbFile, rebuild)
 	if err != nil {
-		log.Fatalf("Error opening db: %v", err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 	if *rebuild {
@@ -103,11 +79,11 @@ func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) er
 	}
 	defer dir.Close()
 	pattern := regexp.MustCompile("0001-L(\\d{3})\\.xml")
-	stmt, err := db.Prepare(insert)
+	stmt, err := db.Prepare(schema.TextInsert)
 	if err != nil {
 		return fmt.Errorf("Error preparing statement: %v", err)
 	}
-	reset, err := db.Prepare(reset)
+	reset, err := db.Prepare(schema.TextDeletePage)
 	if err != nil {
 		return fmt.Errorf("Error preparing statement: %v", err)
 	}
@@ -187,71 +163,9 @@ func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) er
 	return nil
 }
 
-func backupDb(fileName string) error {
-	info, err := os.Stat(fileName)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Error backing up db stat: %v", err)
-	}
-	if os.IsNotExist(err) {
-		return nil
-	}
-	if info.IsDir() {
-		return fmt.Errorf("DB file is a directory. Cannot continue.")
-	}
-	orig, err := os.Open(fileName)
-	if err != nil {
-		return fmt.Errorf("Could not open db: %v", err)
-	}
-	defer orig.Close()
-	bak, err := os.Create(fileName + ".bak")
-	if err != nil {
-		return fmt.Errorf("Error creating backup file: %v", err)
-	}
-	defer bak.Close()
-	_, err = io.Copy(bak, orig)
-	return nil
-}
-
 func prepareDb(db *sql.DB) error {
 	var err error
-	stmts := []string{
-		`
-DROP TABLE IF EXISTS languages;
-		`,
-		`
-CREATE TABLE languages (
-	id INTEGER PRIMARY KEY ASC,
-	name TEXT UNIQUE
-)
-		`,
-		`
-DROP TABLE IF EXISTS text_entries;
-		`,
-		`
-CREATE TABLE text_entries (
-	language_id INTEGER,
-	page_id INTEGER,
-	text_id INTEGER,
-	text TEXT,
-	PRIMARY KEY (language_id, page_id, text_id ASC),
-	FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT ON UPDATE CASCADE
-)
-		`,
-		`
-INSERT INTO languages
-(id, name)
-VALUES
-(7, 'Russian'),
-(33, 'French'),
-(34, 'Spanish'),
-(39, 'Italian'),
-(44, 'English'),
-(49, 'German'),
-(86, 'Chinese (traditional)'),
-(88, 'Chinese (simplified)')
-		`,
-	}
-	for _, sql := range stmts {
+	for _, sql := range schema.TextReset {
 		_, err = db.Exec(sql)
 		if err != nil {
 			return fmt.Errorf("Error preparing db: %v", err)
