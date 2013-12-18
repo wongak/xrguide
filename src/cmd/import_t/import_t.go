@@ -15,9 +15,19 @@ import (
 )
 
 var dbFile = flag.String("db", "xrguide.db", "Database file.")
+var rebuild = flag.Bool("r", false, "Whether to reinitialize db.")
 var textDir = flag.String("t", ".", "Directory with text files.")
 var verbose = flag.Bool("v", true, "Verbose output.")
+var lang = flag.Int64("l", 0, "Language Id. If not specified all.")
+var page = flag.Int64("p", 0, "Page Id. If not specified all.")
 
+var reset string = `
+DELETE FROM text_entries
+WHERE
+language_id = ?
+AND
+page_id = ?
+`
 var insert string = `
 INSERT INTO text_entries
 (language_id, page_id, text_id, text)
@@ -35,12 +45,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error opening db: %v", err)
 	}
-	err = prepareDb(db)
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer db.Close()
-	err = read(db, *textDir, *verbose)
+	if *rebuild {
+		err = prepareDb(db)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	err = read(db, *textDir, *verbose, *lang, *page)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,7 +74,7 @@ type LangFile struct {
 	Pages   []Page   `xml:"page"`
 }
 
-func read(db *sql.DB, directory string, verbose bool) error {
+func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) error {
 	info, err := os.Stat(directory)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Could not stat text directory: %v", err)
@@ -80,6 +92,10 @@ func read(db *sql.DB, directory string, verbose bool) error {
 	defer dir.Close()
 	pattern := regexp.MustCompile("0001-L(\\d{3})\\.xml")
 	stmt, err := db.Prepare(insert)
+	if err != nil {
+		return fmt.Errorf("Error preparing statement: %v", err)
+	}
+	reset, err := db.Prepare(reset)
 	if err != nil {
 		return fmt.Errorf("Error preparing statement: %v", err)
 	}
@@ -111,6 +127,11 @@ func read(db *sql.DB, directory string, verbose bool) error {
 		}
 		log.Printf("Text file %s. Language Id %d", fileName, langId)
 
+		if useLang != 0 && useLang != langId {
+			log.Printf("Skipping %s.", fileName)
+			continue
+		}
+
 		file, err := os.Open(fileName)
 		if err != nil {
 			return fmt.Errorf("Error opening file %s.", fileName)
@@ -123,11 +144,21 @@ func read(db *sql.DB, directory string, verbose bool) error {
 		}
 		for _, page := range lang.Pages {
 			if lang.LangId != langId {
-				fmt.Printf("Language Id does not match in %s. Id %d.", fileName, lang.LangId)
+				log.Printf("Language Id does not match in %s. Id %d.", fileName, lang.LangId)
 				break
+			}
+			if usePage != 0 && usePage != page.Id {
+				if verbose {
+					log.Printf("Skipping page %d.", page.Id)
+				}
+				continue
 			}
 			if verbose {
 				log.Printf("Lang %d Page %d.", lang.LangId, page.Id)
+			}
+			_, err = reset.Exec(lang.LangId, page.Id)
+			if err != nil {
+				return fmt.Errorf("Error on reset. Aborting: %v", err)
 			}
 			for _, t := range page.Entries {
 				if verbose {
