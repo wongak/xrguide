@@ -47,8 +47,8 @@ func main() {
 }
 
 type Text struct {
-	Id    int64 `xml:"id,attr"`
-	Entry string
+	Id    int64  `xml:"id,attr"`
+	Entry string `xml:",innerxml"`
 }
 
 type Page struct {
