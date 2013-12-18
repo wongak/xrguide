@@ -17,7 +17,7 @@ import (
 var dbFile = flag.String("db", "xrguide.db", "Database file.")
 var rebuild = flag.Bool("r", false, "Whether to reinitialize db.")
 var textDir = flag.String("t", ".", "Directory with text files.")
-var verbose = flag.Bool("v", true, "Verbose output.")
+var verbose = flag.Bool("v", false, "Verbose output.")
 var lang = flag.Int64("l", 0, "Language Id. If not specified all.")
 var page = flag.Int64("p", 0, "Page Id. If not specified all.")
 
@@ -40,6 +40,18 @@ func main() {
 	err := backupDb(*dbFile)
 	if err != nil {
 		log.Fatal(err)
+	}
+	dbFileInfo, err := os.Stat(*dbFile)
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatalf("Error on stat db: %v", err)
+	}
+	// force rebuild on new db
+	if os.IsNotExist(err) {
+		*rebuild = true
+	} else {
+		if dbFileInfo.IsDir() {
+			log.Fatalf("Db is a directory.")
+		}
 	}
 	db, err := sql.Open("sqlite3", *dbFile)
 	if err != nil {
