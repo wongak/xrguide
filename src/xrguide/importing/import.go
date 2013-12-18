@@ -52,3 +52,7 @@ func OpenDb(dbFileName string, rebuild *bool) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+func Db(dbFileName string) (*sql.DB, error) {
+	return sql.Open("sqlite3", "file:"+dbFileName+"?cache=shared")
+}

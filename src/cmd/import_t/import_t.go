@@ -5,13 +5,15 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"sync"
+	"time"
 	"xrguide/db/schema"
 	"xrguide/importing"
 )
@@ -22,6 +24,7 @@ var textDir = flag.String("t", ".", "Directory with text files.")
 var verbose = flag.Bool("v", false, "Verbose output.")
 var lang = flag.Int64("l", 0, "Language Id. If not specified all.")
 var page = flag.Int64("p", 0, "Page Id. If not specified all.")
+var workers = flag.Int("w", 10, "Number of pages to process concurrently.")
 
 func main() {
 	flag.Parse()
@@ -33,14 +36,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
 	if *rebuild {
 		err = prepareDb(db)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	err = read(db, *textDir, *verbose, *lang, *page)
+	db.Close()
+	err = read(*dbFile, *textDir, *verbose, *lang, *page)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -62,7 +65,62 @@ type LangFile struct {
 	Pages   []Page   `xml:"page"`
 }
 
-func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) error {
+type workload struct {
+	Lang LangFile
+	Page Page
+}
+
+func read(dbFile string, directory string, verbose bool, useLang, usePage int64) error {
+	var working sync.WaitGroup
+
+	work := make(chan *workload, *workers)
+
+	for i := 0; i < *workers; i++ {
+		go func() {
+			for {
+				select {
+				case w := <-work:
+					if w == nil {
+						return
+					}
+					working.Add(1)
+					db, err := importing.Db(dbFile)
+					if err != nil {
+						log.Panicf("Error opening db: %v", err)
+					}
+					stmt, err := db.Prepare(schema.TextInsert)
+					if err != nil {
+						log.Panicf("Error preparing statement: %v", err)
+					}
+					reset, err := db.Prepare(schema.TextDeletePage)
+					if err != nil {
+						log.Panicf("Error preparing statement: %v", err)
+					}
+					_, err = reset.Exec(w.Lang.LangId, w.Page.Id)
+					for err != nil && err == sqlite3.ErrLocked {
+						time.Sleep(time.Second)
+						_, err = reset.Exec(w.Lang.LangId, w.Page.Id)
+					}
+					if err != nil {
+						log.Panicf("Error on reset. Aborting: %v", err)
+					}
+					for _, t := range w.Page.Entries {
+						if verbose {
+							log.Printf("Lang %d Page %d Text %d.", w.Lang.LangId, w.Page.Id, t.Id)
+						}
+						_, err = stmt.Exec(w.Lang.LangId, w.Page.Id, t.Id, t.Entry)
+						if err != nil {
+							log.Panicf("Error on insert. Aborting: %v", err)
+						}
+					}
+					db.Close()
+					log.Printf("Finished Lang %d Page %d.", w.Lang.LangId, w.Page.Id)
+					working.Done()
+				}
+			}
+		}()
+	}
+
 	info, err := os.Stat(directory)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Could not stat text directory: %v", err)
@@ -79,14 +137,6 @@ func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) er
 	}
 	defer dir.Close()
 	pattern := regexp.MustCompile("0001-L(\\d{3})\\.xml")
-	stmt, err := db.Prepare(schema.TextInsert)
-	if err != nil {
-		return fmt.Errorf("Error preparing statement: %v", err)
-	}
-	reset, err := db.Prepare(schema.TextDeletePage)
-	if err != nil {
-		return fmt.Errorf("Error preparing statement: %v", err)
-	}
 	var langId int64
 	var fileName string
 	var lang LangFile
@@ -144,22 +194,13 @@ func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) er
 			if verbose {
 				log.Printf("Lang %d Page %d.", lang.LangId, page.Id)
 			}
-			_, err = reset.Exec(lang.LangId, page.Id)
-			if err != nil {
-				return fmt.Errorf("Error on reset. Aborting: %v", err)
-			}
-			for _, t := range page.Entries {
-				if verbose {
-					log.Printf("Lang %d Page %d Text %d.", lang.LangId, page.Id, t.Id)
-				}
-				_, err = stmt.Exec(lang.LangId, page.Id, t.Id, t.Entry)
-				if err != nil {
-					return fmt.Errorf("Error on insert. Aborting: %v", err)
-				}
-			}
+			wl := &workload{lang, page}
+			work <- wl
 		}
 		file.Close()
 	}
+	working.Wait()
+	close(work)
 	return nil
 }
 
