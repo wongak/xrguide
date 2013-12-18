@@ -18,7 +18,10 @@ import (
 	"xrguide/importing"
 )
 
-var dbFile = flag.String("db", "xrguide.db", "Database file.")
+const MAX_WORKERS = 50
+
+var dbType = flag.String("dbt", "sqlite3", "Database type.")
+var dsn = flag.String("dsn", "xrguide.db", "Database DSN.")
 var rebuild = flag.Bool("r", false, "Whether to reinitialize db.")
 var textDir = flag.String("t", ".", "Directory with text files.")
 var verbose = flag.Bool("v", false, "Verbose output.")
@@ -28,22 +31,38 @@ var workers = flag.Int("w", 10, "Number of pages to process concurrently.")
 
 func main() {
 	flag.Parse()
-	err := importing.BackupDb(*dbFile)
+
+	if *workers <= 0 {
+		*workers = 10
+	}
+	if *workers > MAX_WORKERS {
+		*workers = MAX_WORKERS
+	}
+
+	var database *importing.ImportDb
+
+	if *dbType == "sqlite3" {
+		err := importing.BackupDb(*dsn)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	database, err := importing.Connect(*dbType, *dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
-	db, err := importing.OpenDb(*dbFile, rebuild)
+	db, err := database.OpenDb(*dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if *rebuild {
+	if *rebuild || database.RequireRebuild() {
 		err = prepareDb(db)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	db.Close()
-	err = read(*dbFile, *textDir, *verbose, *lang, *page)
+	defer db.Close()
+	err = read(database, *textDir, *verbose, *lang, *page)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,24 +89,25 @@ type workload struct {
 	Page Page
 }
 
-func read(dbFile string, directory string, verbose bool, useLang, usePage int64) error {
+func read(database *importing.ImportDb, directory string, verbose bool, useLang, usePage int64) error {
 	var working sync.WaitGroup
 
 	work := make(chan *workload, *workers)
 
 	for i := 0; i < *workers; i++ {
-		go func() {
+		db, err := database.Db()
+		if err != nil {
+			log.Panicf("Error opening db: %v", err)
+		}
+		go func(db *sql.DB) {
 			for {
 				select {
 				case w := <-work:
 					if w == nil {
+						db.Close()
 						return
 					}
 					working.Add(1)
-					db, err := importing.Db(dbFile)
-					if err != nil {
-						log.Panicf("Error opening db: %v", err)
-					}
 					stmt, err := db.Prepare(schema.TextInsert)
 					if err != nil {
 						log.Panicf("Error preparing statement: %v", err)
@@ -113,12 +133,12 @@ func read(dbFile string, directory string, verbose bool, useLang, usePage int64)
 							log.Panicf("Error on insert. Aborting: %v", err)
 						}
 					}
-					db.Close()
+
 					log.Printf("Finished Lang %d Page %d.", w.Lang.LangId, w.Page.Id)
 					working.Done()
 				}
 			}
-		}()
+		}(db)
 	}
 
 	info, err := os.Stat(directory)

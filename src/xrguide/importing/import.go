@@ -3,10 +3,70 @@ package importing
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 	"io"
 	"os"
 )
+
+type ImportDb struct {
+	requireRebuild bool
+	dsn            string
+	db             *sql.DB
+
+	OpenDb func(dsn string) (*sql.DB, error)
+	Db     func() (*sql.DB, error)
+}
+
+func (i ImportDb) RequireRebuild() bool {
+	return i.requireRebuild
+}
+
+func Connect(dbType, dsn string) (*ImportDb, error) {
+	var db ImportDb
+	switch dbType {
+	case "sqlite3":
+		db.OpenDb = func(dsn string) (*sql.DB, error) {
+			db.dsn = dsn
+			dbFileInfo, err := os.Stat(dsn)
+			if err != nil && !os.IsNotExist(err) {
+				return nil, fmt.Errorf("Error on stat db: %v", err)
+			}
+			// force rebuild on new db
+			if os.IsNotExist(err) {
+				db.requireRebuild = true
+			} else {
+				if dbFileInfo.IsDir() {
+					return nil, fmt.Errorf("Db is a directory.")
+				}
+			}
+			sqlite, err := sql.Open("sqlite3", dsn)
+			if err != nil {
+				return nil, fmt.Errorf("Error opening db: %v", err)
+			}
+			return sqlite, err
+		}
+		db.Db = func() (*sql.DB, error) {
+			return sql.Open("sqlite3", "file:"+db.dsn+"?cache=shared")
+		}
+	case "mysql":
+		db.OpenDb = func(dsn string) (*sql.DB, error) {
+			var err error
+			db.dsn = dsn
+			db.db, err = sql.Open("mysql", dsn)
+			if err != nil {
+				return nil, fmt.Errorf("Error connecting to MySQL: %v", err)
+			}
+			return db.db, nil
+		}
+		db.Db = func() (*sql.DB, error) {
+			return db.db, nil
+		}
+	default:
+		return nil, fmt.Errorf("Invalid db type: %s", dbType)
+	}
+	return &db, nil
+}
 
 func BackupDb(fileName string) error {
 	info, err := os.Stat(fileName)
@@ -31,28 +91,4 @@ func BackupDb(fileName string) error {
 	defer bak.Close()
 	_, err = io.Copy(bak, orig)
 	return nil
-}
-
-func OpenDb(dbFileName string, rebuild *bool) (*sql.DB, error) {
-	dbFileInfo, err := os.Stat(dbFileName)
-	if err != nil && !os.IsNotExist(err) {
-		return nil, fmt.Errorf("Error on stat db: %v", err)
-	}
-	// force rebuild on new db
-	if os.IsNotExist(err) {
-		*rebuild = true
-	} else {
-		if dbFileInfo.IsDir() {
-			return nil, fmt.Errorf("Db is a directory.")
-		}
-	}
-	db, err := sql.Open("sqlite3", dbFileName)
-	if err != nil {
-		return nil, fmt.Errorf("Error opening db: %v", err)
-	}
-	return db, nil
-}
-
-func Db(dbFileName string) (*sql.DB, error) {
-	return sql.Open("sqlite3", "file:"+dbFileName+"?cache=shared")
 }

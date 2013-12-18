@@ -5,8 +5,8 @@ DROP TABLE IF EXISTS languages;
 `
 var TextCreateLanguages = `
 CREATE TABLE languages (
-	id INTEGER PRIMARY KEY ASC,
-	name TEXT UNIQUE
+	id INTEGER PRIMARY KEY,
+	name VARCHAR(75) UNIQUE
 )
 `
 
@@ -20,7 +20,7 @@ CREATE TABLE text_entries (
 	page_id INTEGER,
 	text_id INTEGER,
 	text TEXT,
-	PRIMARY KEY (language_id, page_id, text_id ASC),
+	PRIMARY KEY (language_id, page_id, text_id),
 	FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT ON UPDATE CASCADE
 )
 `
