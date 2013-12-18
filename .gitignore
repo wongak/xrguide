@@ -1,6 +1,7 @@
 pkg
 bin
 resources
-# binary
+# binaries
 src/cmd/import_t/import_t
+src/cmd/import_wares/import_wares
 
