@@ -1,0 +1,6 @@
+pkg
+bin
+resources
+# binary
+src/cmd/import_t/import_t
+
