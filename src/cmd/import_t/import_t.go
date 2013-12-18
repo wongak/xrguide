@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-
 	"encoding/xml"
 	"flag"
 	"fmt"
