@@ -166,7 +166,7 @@ func read(db *sql.DB, directory string, verbose bool, useLang, usePage int64) er
 func prepareDb(db *sql.DB) error {
 	var err error
 	for _, sql := range schema.TextReset {
-		_, err = db.Exec(sql)
+		_, err = db.Exec(*sql)
 		if err != nil {
 			return fmt.Errorf("Error preparing db: %v", err)
 		}

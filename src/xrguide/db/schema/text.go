@@ -1,19 +1,20 @@
 package schema
 
-var TextReset = []string{
-	`
+var TextDropLanguages = `
 DROP TABLE IF EXISTS languages;
-		`,
-	`
+`
+var TextCreateLanguages = `
 CREATE TABLE languages (
 	id INTEGER PRIMARY KEY ASC,
 	name TEXT UNIQUE
 )
-		`,
-	`
+`
+
+var TextDropEntries = `
 DROP TABLE IF EXISTS text_entries;
-		`,
-	`
+`
+
+var TextCreateEntries = `
 CREATE TABLE text_entries (
 	language_id INTEGER,
 	page_id INTEGER,
@@ -22,8 +23,9 @@ CREATE TABLE text_entries (
 	PRIMARY KEY (language_id, page_id, text_id ASC),
 	FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT ON UPDATE CASCADE
 )
-		`,
-	`
+`
+
+var TextDefaultLanguages = `
 INSERT INTO languages
 (id, name)
 VALUES
@@ -35,7 +37,14 @@ VALUES
 (49, 'German'),
 (86, 'Chinese (traditional)'),
 (88, 'Chinese (simplified)')
-		`,
+`
+
+var TextReset = []*string{
+	&TextDropLanguages,
+	&TextCreateLanguages,
+	&TextDropEntries,
+	&TextCreateEntries,
+	&TextDefaultLanguages,
 }
 
 var TextDeletePage string = `
@@ -45,6 +54,7 @@ language_id = ?
 AND
 page_id = ?
 `
+
 var TextInsert string = `
 INSERT INTO text_entries
 (language_id, page_id, text_id, text)
