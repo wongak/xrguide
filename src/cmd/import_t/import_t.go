@@ -107,7 +107,6 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 						db.Close()
 						return
 					}
-					working.Add(1)
 					stmt, err := db.Prepare(schema.TextInsert)
 					if err != nil {
 						log.Panicf("Error preparing statement: %v", err)
@@ -215,6 +214,7 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 				log.Printf("Lang %d Page %d.", lang.LangId, page.Id)
 			}
 			wl := &workload{lang, page}
+			working.Add(1)
 			work <- wl
 		}
 		file.Close()
