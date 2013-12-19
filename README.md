@@ -25,7 +25,8 @@ Here is a list of the currently implemented parameters and a short explanation:
 		Example:
 			-dsn german.db
 			-dsn root:root@tcp(localhost:3306)/xrguide?charset=utf8mb4,utf8
-				This is a MySQL DSN. You can find the specifis here: https://github.com/go-sql-driver/mysql#dsn-data-source-name
+				This is a MySQL DSN. 
+				You can find the specifics here: https://github.com/go-sql-driver/mysql#dsn-data-source-name
 				
 	-l The language id to be imported. If 0, all languages will be imported.
 		Example:
