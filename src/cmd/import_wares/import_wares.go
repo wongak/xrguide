@@ -160,7 +160,7 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 	var imported, skipped int
 	for _, ware := range wares.Wares {
 		var namePageId, nameTextId, descPageId, descTextId sql.NullInt64
-		var rawName sql.NullString
+		var rawName, specialist sql.NullString
 		namePageId.Int64, nameTextId.Int64, err = text.ParseTextRef(ware.Name)
 		if err != nil {
 			rawName.String = ware.Name
@@ -173,6 +173,10 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 			descPageId.Valid = true
 			descTextId.Valid = true
 		}
+		if ware.Specialist != "" {
+			specialist.String = ware.Specialist
+			specialist.Valid = true
+		}
 		_, err := insertWare.Exec(
 			ware.Id,
 			namePageId,
@@ -181,7 +185,7 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 			descTextId,
 			rawName,
 			ware.Transport,
-			ware.Specialist,
+			specialist,
 			ware.Size,
 			ware.Volume,
 			ware.Price.Min,
