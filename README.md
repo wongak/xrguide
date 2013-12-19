@@ -2,6 +2,8 @@
 
 ## The Tools
 
+Linux/amd64 binary available here: https://github.com/wongak/xrguide/releases/download/v0.1-alpha/import_t.gz
+
 ### Text Importing
 
 The command `import_t` will import the text from the text directory.
