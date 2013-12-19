@@ -51,6 +51,18 @@ func Connect(dbType, dsn string) (*ImportDb, error) {
 			return sql.Open("sqlite3", "file:"+db.dsn+"?cache=shared")
 		}
 		db.SetIgnoreForeignKeys = func(ignore bool) error {
+			db, err := sql.Open("sqlite3", "file:"+db.dsn+"?cache=shared")
+			if err != nil {
+				return err
+			}
+			if ignore {
+				_, err = db.Exec("PRAGMA foreign_keys = OFF")
+			} else {
+				_, err = db.Exec("PRAGMA foreign_keys = ON")
+			}
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 	case "mysql":
