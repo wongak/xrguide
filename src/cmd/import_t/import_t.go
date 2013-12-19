@@ -56,7 +56,7 @@ func main() {
 		log.Fatal(err)
 	}
 	if *rebuild || database.RequireRebuild() {
-		err = prepareDb(db)
+		err = prepareDb(database)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -224,13 +224,25 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 	return nil
 }
 
-func prepareDb(db *sql.DB) error {
+func prepareDb(database *importing.ImportDb) error {
 	var err error
+	err = database.SetIgnoreForeignKeys(true)
+	if err != nil {
+		return err
+	}
+	db, err := database.Db()
+	if err != nil {
+		return err
+	}
 	for _, sql := range schema.TextReset {
 		_, err = db.Exec(*sql)
 		if err != nil {
 			return fmt.Errorf("Error preparing db: %v", err)
 		}
+	}
+	err = database.SetIgnoreForeignKeys(false)
+	if err != nil {
+		return err
 	}
 	return nil
 }

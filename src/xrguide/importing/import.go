@@ -14,8 +14,9 @@ type ImportDb struct {
 	dsn            string
 	db             *sql.DB
 
-	OpenDb func(dsn string) (*sql.DB, error)
-	Db     func() (*sql.DB, error)
+	OpenDb               func(dsn string) (*sql.DB, error)
+	Db                   func() (*sql.DB, error)
+	SetIgnoreForeignKeys func(ignore bool) error
 }
 
 func (i ImportDb) RequireRebuild() bool {
@@ -49,6 +50,9 @@ func Connect(dbType, dsn string) (*ImportDb, error) {
 		db.Db = func() (*sql.DB, error) {
 			return sql.Open("sqlite3", "file:"+db.dsn+"?cache=shared")
 		}
+		db.SetIgnoreForeignKeys = func(ignore bool) error {
+			return nil
+		}
 	case "mysql":
 		db.OpenDb = func(dsn string) (*sql.DB, error) {
 			var err error
@@ -60,7 +64,27 @@ func Connect(dbType, dsn string) (*ImportDb, error) {
 			return db.db, nil
 		}
 		db.Db = func() (*sql.DB, error) {
+			if db.db == nil {
+				return nil, fmt.Errorf("No MySQL connection. Call OpenDb() first.")
+			}
 			return db.db, nil
+		}
+		db.SetIgnoreForeignKeys = func(ignore bool) error {
+			if db.db == nil {
+				return fmt.Errorf("No MySQL connection. Call OpenDb() first.")
+			}
+			if ignore {
+				_, err := db.db.Exec("SET FOREIGN_KEY_CHECKS=0")
+				if err != nil {
+					return fmt.Errorf("Error ignoring foreign keys: %v", err)
+				}
+			} else {
+				_, err := db.db.Exec("SET FOREIGN_KEY_CHECKS=1")
+				if err != nil {
+					return fmt.Errorf("Error set foreign keys: %v", err)
+				}
+			}
+			return nil
 		}
 	default:
 		return nil, fmt.Errorf("Invalid db type: %s", dbType)
