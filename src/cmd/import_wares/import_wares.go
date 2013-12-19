@@ -5,7 +5,8 @@ import (
 	"flag"
 )
 
-var dbFile = flag.String("db", "xrguide.db", "Database file.")
+var dbType = flag.String("dbt", "sqlite3", "Database backend type.")
+var dsn = flag.String("dsn", "xrguide.db", "DSN")
 var rebuild = flag.Bool("r", false, "Whether to reinitialize db.")
 var textDir = flag.String("l", ".", "Libraries directory.")
 var verbose = flag.Bool("v", false, "Verbose output.")
