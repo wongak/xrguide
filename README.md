@@ -2,7 +2,8 @@
 
 ## The Tools
 
-Linux/amd64 binary available here: https://github.com/wongak/xrguide/releases/download/v0.1-alpha/import_t.gz
+* Windows/amd64 binary available here: https://github.com/wongak/xrguide/releases/download/v0.1-alpha/import_t.zip
+* Linux/amd64 binary available here: https://github.com/wongak/xrguide/releases/download/v0.1-alpha/import_t.gz
 
 ### Text Importing
 
