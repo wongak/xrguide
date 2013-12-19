@@ -25,6 +25,10 @@ CREATE TABLE text_entries (
 )
 `
 
+var TextCreateIndex = `
+CREATE INDEX text_idx ON text_entries (page_id, text_id)
+`
+
 var TextDefaultLanguages = `
 INSERT INTO languages
 (id, name)
@@ -44,6 +48,7 @@ var TextReset = []*string{
 	&TextCreateLanguages,
 	&TextDropEntries,
 	&TextCreateEntries,
+	&TextCreateIndex,
 	&TextDefaultLanguages,
 }
 
