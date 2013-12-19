@@ -24,7 +24,7 @@ Here is a list of the currently implemented parameters and a short explanation:
 	    Default: "xrguide.db" - This is for the sqlite3 backend and will use the xrguide.db file.
 		Example:
 			-dsn german.db
-			-dsn root:root@tcp(localhost:3306)/xrguide?charset=utf8mb4,utf8
+			-dsn "root:root@tcp(localhost:3306)/xrguide?charset=utf8mb4,utf8"
 				This is a MySQL DSN. 
 				You can find the specifics here: https://github.com/go-sql-driver/mysql#dsn-data-source-name
 				
