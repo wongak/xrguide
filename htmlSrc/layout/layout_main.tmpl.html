@@ -1,0 +1,18 @@
+{{define "head"}}
+<!doctype html>
+<html>
+<head>
+    <title>{{.Data.title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/xrguide.css" />
+</head>
+{{end}}
+{{define "body_start"}}
+<body>
+{{template "nav" .}}
+<div id="c" class="container">
+{{end}}
+{{define "body_end"}}
+</div>
+{{end}}

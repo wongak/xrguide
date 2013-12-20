@@ -1,0 +1,12 @@
+{{template "head" .}}
+{{template "body_start" .}}
+<div class="container">
+    <div class="alert alert-danger">
+        <h1>This should never happen!</h1>
+        <p><strong>But it did!</strong> There was a critical error. This is not you fault. We screwed up.</p>
+        <p>Please include the following ID in your error report to us. We will fix it as quickly as possible:</p>
+        <blockquote><p>{{.Data.timestamp}}</p></blockquote>
+    </div>
+</div>
+{{template "body_end" .}}
+{{template "footer" .}}

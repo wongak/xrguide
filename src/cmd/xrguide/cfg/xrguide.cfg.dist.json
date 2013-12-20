@@ -1,0 +1,11 @@
+{
+	"Db": {
+		"Dsn": {
+			"mysql": "xrguide@/xrguide?charset=utf8mb4,utf8&parseTime=true"
+		}
+	},
+	
+	"Html": {
+		"HtmlSrcDir": "htmlSrc"
+	}
+}
