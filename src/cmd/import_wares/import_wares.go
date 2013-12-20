@@ -89,7 +89,7 @@ type Ware struct {
 
 	Container   Container   `xml:"container"`
 	Icon        Icon        `xml:"icon"`
-	Restriction Restriction `xml:"resriction"`
+	Restriction Restriction `xml:"restriction"`
 }
 
 type Price struct {
