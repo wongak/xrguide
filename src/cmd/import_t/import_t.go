@@ -95,10 +95,6 @@ type workload struct {
 }
 
 func read(database *importing.ImportDb, directory string, verbose bool, useLang, usePage int64) error {
-	err := database.SetIgnoreForeignKeys(true)
-	if err != nil {
-		return fmt.Errorf("Error while ignoring FK: %v", err)
-	}
 	var working sync.WaitGroup
 
 	work := make(chan *workload, *workers)
@@ -124,6 +120,10 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 					if err != nil {
 						log.Panicf("Error preparing statement: %v", err)
 					}
+					_, err = db.Exec(database.GetIgnoreForeignKeys(true))
+					if err != nil {
+						log.Panicf("Error ignoring foreign keys: %v", err)
+					}
 					_, err = reset.Exec(w.Lang.LangId, w.Page.Id)
 					for err != nil && err == sqlite3.ErrLocked {
 						time.Sleep(time.Second)
@@ -131,6 +131,10 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 					}
 					if err != nil {
 						log.Panicf("Error on reset. Aborting: %v", err)
+					}
+					_, err = db.Exec(database.GetIgnoreForeignKeys(false))
+					if err != nil {
+						log.Panicf("Error on foreign keys: %v", err)
 					}
 					for _, t := range w.Page.Entries {
 						if verbose {
@@ -230,20 +234,16 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 	}
 	working.Wait()
 	close(work)
-	err = database.SetIgnoreForeignKeys(false)
-	if err != nil {
-		return fmt.Errorf("Error while reactivating FK: %v", err)
-	}
 	return nil
 }
 
 func prepareDb(database *importing.ImportDb) error {
 	var err error
-	err = database.SetIgnoreForeignKeys(true)
+	db, err := database.Db()
 	if err != nil {
 		return err
 	}
-	db, err := database.Db()
+	_, err = db.Exec(database.GetIgnoreForeignKeys(true))
 	if err != nil {
 		return err
 	}
@@ -253,7 +253,7 @@ func prepareDb(database *importing.ImportDb) error {
 			return fmt.Errorf("Error preparing db: %v", err)
 		}
 	}
-	err = database.SetIgnoreForeignKeys(false)
+	_, err = db.Exec(database.GetIgnoreForeignKeys(false))
 	if err != nil {
 		return err
 	}

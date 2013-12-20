@@ -16,7 +16,7 @@ type ImportDb struct {
 
 	OpenDb               func(dsn string) (*sql.DB, error)
 	Db                   func() (*sql.DB, error)
-	SetIgnoreForeignKeys func(ignore bool) error
+	GetIgnoreForeignKeys func(ignore bool) string
 }
 
 func (i ImportDb) RequireRebuild() bool {
@@ -50,20 +50,14 @@ func Connect(dbType, dsn string) (*ImportDb, error) {
 		db.Db = func() (*sql.DB, error) {
 			return sql.Open("sqlite3", "file:"+db.dsn+"?cache=shared")
 		}
-		db.SetIgnoreForeignKeys = func(ignore bool) error {
-			db, err := sql.Open("sqlite3", "file:"+db.dsn+"?cache=shared")
-			if err != nil {
-				return err
-			}
+		db.GetIgnoreForeignKeys = func(ignore bool) string {
+			const off = "PRAGMA foreign_keys = OFF"
+			const on = "PRAGMA foreign_keys = ON"
 			if ignore {
-				_, err = db.Exec("PRAGMA foreign_keys = OFF")
+				return off
 			} else {
-				_, err = db.Exec("PRAGMA foreign_keys = ON")
+				return on
 			}
-			if err != nil {
-				return err
-			}
-			return nil
 		}
 	case "mysql":
 		db.OpenDb = func(dsn string) (*sql.DB, error) {
@@ -81,22 +75,14 @@ func Connect(dbType, dsn string) (*ImportDb, error) {
 			}
 			return db.db, nil
 		}
-		db.SetIgnoreForeignKeys = func(ignore bool) error {
-			if db.db == nil {
-				return fmt.Errorf("No MySQL connection. Call OpenDb() first.")
-			}
+		db.GetIgnoreForeignKeys = func(ignore bool) string {
+			const off = "SET FOREIGN_KEY_CHECKS=0"
+			const on = "SET FOREIGN_KEY_CHECKS=1"
 			if ignore {
-				_, err := db.db.Exec("SET FOREIGN_KEY_CHECKS=0")
-				if err != nil {
-					return fmt.Errorf("Error ignoring foreign keys: %v", err)
-				}
+				return off
 			} else {
-				_, err := db.db.Exec("SET FOREIGN_KEY_CHECKS=1")
-				if err != nil {
-					return fmt.Errorf("Error set foreign keys: %v", err)
-				}
+				return on
 			}
-			return nil
 		}
 	default:
 		return nil, fmt.Errorf("Invalid db type: %s", dbType)

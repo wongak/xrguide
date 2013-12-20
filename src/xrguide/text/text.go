@@ -9,6 +9,10 @@ import (
 
 var textRefPattern = regexp.MustCompile(`\{(\d+),(\d+)\}`)
 
+func HasRef(ref string) bool {
+	return textRefPattern.MatchString(ref)
+}
+
 func ParseTextRef(ref string) (page, text int64, err error) {
 	matches := textRefPattern.FindStringSubmatch(ref)
 	if len(matches) != 3 {
