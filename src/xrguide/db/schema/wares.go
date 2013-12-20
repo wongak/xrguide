@@ -77,6 +77,12 @@ CREATE TABLE wares_production_effects (
 
 var WaresDropIndexes = []string{
 	`
+DROP INDEX wares_name_text
+	`,
+	`
+DROP INDEX wares_description_text
+	`,
+	`
 DROP INDEX wares_transport
 	`,
 	`
@@ -97,6 +103,12 @@ DROP INDEX wares_production_wares_production
 }
 
 var WaresCreateIndexes = []string{
+	`
+CREATE INDEX wares_name_text ON wares (name_page_id, name_text_id)
+	`,
+	`
+CREATE INDEX wares_description_text ON wares (description_page_id, description_text_id)
+	`,
 	`
 CREATE INDEX wares_transport ON wares (transport)
 	`,
