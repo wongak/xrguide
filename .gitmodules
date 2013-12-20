@@ -4,4 +4,9 @@
 [submodule "src/github.com/go-sql-driver/mysql"]
 	path = src/github.com/go-sql-driver/mysql
 	url = https://github.com/go-sql-driver/mysql
-
+[submodule "src/github.com/codegangsta/inject"]
+	path = src/github.com/codegangsta/inject
+	url = https://github.com/codegangsta/inject
+[submodule "src/github.com/codegangsta/martini"]
+	path = src/github.com/codegangsta/martini
+	url = https://github.com/codegangsta/martini
