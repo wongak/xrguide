@@ -44,27 +44,32 @@ func main() {
 	if *dbType == "sqlite3" {
 		err := importing.BackupDb(*dsn)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			os.Exit(1)
 		}
 	}
 	database, err := importing.Connect(*dbType, *dsn)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		os.Exit(1)
 	}
 	db, err := database.OpenDb(*dsn)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		os.Exit(1)
 	}
 	if *rebuild || database.RequireRebuild() {
 		err = prepareDb(database)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			os.Exit(1)
 		}
 	}
 	defer db.Close()
 	err = read(database, *textDir, *verbose, *lang, *page)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		os.Exit(1)
 	}
 }
 
@@ -90,6 +95,10 @@ type workload struct {
 }
 
 func read(database *importing.ImportDb, directory string, verbose bool, useLang, usePage int64) error {
+	err := database.SetIgnoreForeignKeys(true)
+	if err != nil {
+		return fmt.Errorf("Error while ignoring FK: %v", err)
+	}
 	var working sync.WaitGroup
 
 	work := make(chan *workload, *workers)
@@ -221,6 +230,10 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 	}
 	working.Wait()
 	close(work)
+	err = database.SetIgnoreForeignKeys(false)
+	if err != nil {
+		return fmt.Errorf("Error while reactivating FK: %v", err)
+	}
 	return nil
 }
 
