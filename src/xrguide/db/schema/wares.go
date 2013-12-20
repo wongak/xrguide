@@ -18,9 +18,9 @@ CREATE TABLE wares (
 	volume INTEGER,
 	price_min INTEGER,
 	price_average INTEGER,
-	price_max INTEGER,
-	FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (description_page_id, description_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE
+	price_max INTEGER
+/* FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (description_page_id, description_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE */
 )
 `
 
@@ -36,9 +36,9 @@ CREATE TABLE wares_productions (
 	amount INTEGER,
 	name_page_id INTEGER NOT NULL,
 	name_text_id INTEGER NOT NULL,
-	PRIMARY KEY (ware_id, method),
-	FOREIGN KEY (ware_id) REFERENCES wares(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE
+	PRIMARY KEY (ware_id, method)
+/*	FOREIGN KEY (ware_id) REFERENCES wares(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE */
 )
 `
 
@@ -52,9 +52,9 @@ CREATE TABLE wares_production_wares (
 	method VARCHAR(64) NOT NULL,
 	is_primary TINYINT(1),
 	ware VARCHAR(128) NOT NULL,
-	amount INT,
-	FOREIGN KEY (ware_id, method) REFERENCES wares_productions(ware_id, method) ON DELETE RESTRICT ON UPDATE CASCADE,
-	FOREIGN KEY (ware) REFERENCES wares(id) ON DELETE RESTRICT ON UPDATE CASCADE
+	amount INT
+/*	FOREIGN KEY (ware_id, method) REFERENCES wares_productions(ware_id, method) ON DELETE RESTRICT ON UPDATE CASCADE,
+	FOREIGN KEY (ware) REFERENCES wares(id) ON DELETE RESTRICT ON UPDATE CASCADE */
 )
 `
 
@@ -67,8 +67,8 @@ CREATE TABLE wares_production_effects (
 	ware_id VARCHAR(128) NOT NULL,
 	method VARCHAR(64) NOT NULL,
 	type VARCHAR(128),
-	product FLOAT,
-	FOREIGN KEY (ware_id, method) REFERENCES wares_productions(ware_id, method) ON DELETE RESTRICT ON UPDATE CASCADE
+	product FLOAT
+/*	FOREIGN KEY (ware_id, method) REFERENCES wares_productions(ware_id, method) ON DELETE RESTRICT ON UPDATE CASCADE */
 )
 `
 

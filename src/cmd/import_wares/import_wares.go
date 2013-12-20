@@ -143,10 +143,6 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 	if err != nil {
 		return fmt.Errorf("Error connecting to db: %v", err)
 	}
-	err = database.SetIgnoreForeignKeys(true)
-	if err != nil {
-		return fmt.Errorf("Error ignoring foreign keys: %v", err)
-	}
 	insertWare, err := db.Prepare(schema.WareInsertWare)
 	if err != nil {
 		return fmt.Errorf("Error preparing SQL: %v", err)
@@ -203,10 +199,6 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 
 func prepareDb(database *importing.ImportDb) error {
 	var err error
-	err = database.SetIgnoreForeignKeys(true)
-	if err != nil {
-		return err
-	}
 	db, err := database.Db()
 	if err != nil {
 		return err
@@ -222,10 +214,6 @@ func prepareDb(database *importing.ImportDb) error {
 		if err != nil {
 			return fmt.Errorf("Error creating index: %v", err)
 		}
-	}
-	err = database.SetIgnoreForeignKeys(false)
-	if err != nil {
-		return err
 	}
 	return nil
 }

@@ -16,6 +16,7 @@ import (
 	"time"
 	"xrguide/db/schema"
 	"xrguide/importing"
+	"xrguide/text"
 )
 
 const MAX_WORKERS = 50
@@ -120,10 +121,6 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 					if err != nil {
 						log.Panicf("Error preparing statement: %v", err)
 					}
-					_, err = db.Exec(database.GetIgnoreForeignKeys(true))
-					if err != nil {
-						log.Panicf("Error ignoring foreign keys: %v", err)
-					}
 					_, err = reset.Exec(w.Lang.LangId, w.Page.Id)
 					for err != nil && err == sqlite3.ErrLocked {
 						time.Sleep(time.Second)
@@ -132,15 +129,16 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 					if err != nil {
 						log.Panicf("Error on reset. Aborting: %v", err)
 					}
-					_, err = db.Exec(database.GetIgnoreForeignKeys(false))
 					if err != nil {
 						log.Panicf("Error on foreign keys: %v", err)
 					}
+					var hasRef bool
 					for _, t := range w.Page.Entries {
 						if verbose {
 							log.Printf("Lang %d Page %d Text %d.", w.Lang.LangId, w.Page.Id, t.Id)
 						}
-						_, err = stmt.Exec(w.Lang.LangId, w.Page.Id, t.Id, t.Entry)
+						hasRef = text.HasRef(t.Entry)
+						_, err = stmt.Exec(w.Lang.LangId, w.Page.Id, t.Id, t.Entry, hasRef)
 						if err != nil {
 							log.Panicf("Error on insert. Aborting: %v", err)
 						}
@@ -243,19 +241,11 @@ func prepareDb(database *importing.ImportDb) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(database.GetIgnoreForeignKeys(true))
-	if err != nil {
-		return err
-	}
 	for _, sql := range schema.TextReset {
 		_, err = db.Exec(*sql)
 		if err != nil {
 			return fmt.Errorf("Error preparing db: %v", err)
 		}
-	}
-	_, err = db.Exec(database.GetIgnoreForeignKeys(false))
-	if err != nil {
-		return err
 	}
 	return nil
 }

@@ -20,8 +20,9 @@ CREATE TABLE text_entries (
 	page_id INTEGER,
 	text_id INTEGER,
 	text TEXT,
-	PRIMARY KEY (language_id, page_id, text_id),
-	FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT ON UPDATE CASCADE
+	has_ref TINYINT(1),
+	PRIMARY KEY (language_id, page_id, text_id)
+/*	FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT ON UPDATE CASCADE */
 )
 `
 
@@ -62,7 +63,7 @@ page_id = ?
 
 var TextInsert string = `
 INSERT INTO text_entries
-(language_id, page_id, text_id, text)
+(language_id, page_id, text_id, text, has_ref)
 VALUES
-(?, ?, ?, ?)
+(?, ?, ?, ?, ?)
 `
