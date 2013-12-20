@@ -19,7 +19,7 @@ CREATE TABLE wares (
 	price_min INTEGER,
 	price_average INTEGER,
 	price_max INTEGER,
-	container VARCHAR(64),
+	container VARCHAR(128),
 	icon VARCHAR(128),
 	restriction_sell FLOAT
 /* FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE,
