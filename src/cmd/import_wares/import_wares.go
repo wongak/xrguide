@@ -66,11 +66,11 @@ func main() {
 type Wares struct {
 	XMLName xml.Name `xml:"wares"`
 
-	Wares []Ware `xml:"ware"`
+	Default Default `xml:"defaults"`
+	Wares   []Ware  `xml:"ware"`
 }
 
 type Default struct {
-	XMLName xml.Name `xml:"wares"`
 	Ware
 }
 
@@ -86,6 +86,10 @@ type Ware struct {
 
 	Price      Price        `xml:"price"`
 	Production []Production `xml:"production"`
+
+	Container   Container   `xml:"container"`
+	Icon        Icon        `xml:"icon"`
+	Restriction Restriction `xml:"resriction"`
 }
 
 type Price struct {
@@ -103,10 +107,6 @@ type Production struct {
 	Effects   []ProductionEffect `xml:"effects>effect"`
 	Primary   []ProductionWare   `xml:"primary>ware"`
 	Secondary []ProductionWare   `xml:"secondary>ware"`
-
-	Container   Container   `xml:"container"`
-	Icon        Icon        `xml:"icon"`
-	Restriction Restriction `xml:"resriction"`
 }
 
 type ProductionEffect struct {
@@ -143,7 +143,19 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 	if err != nil {
 		return fmt.Errorf("Error connecting to db: %v", err)
 	}
-	insertWare, err := db.Prepare(schema.WareInsertWare)
+	insertWare, err := db.Prepare(schema.WaresInsertWare)
+	if err != nil {
+		return fmt.Errorf("Error preparing SQL: %v", err)
+	}
+	insertProduction, err := db.Prepare(schema.WaresInsertProduction)
+	if err != nil {
+		return fmt.Errorf("Error preparing SQL: %v", err)
+	}
+	insertProductionWare, err := db.Prepare(schema.WaresInsertProductionWare)
+	if err != nil {
+		return fmt.Errorf("Error preparing SQL: %v", err)
+	}
+	insertProductionEffect, err := db.Prepare(schema.WaresInsertProductionEffect)
 	if err != nil {
 		return fmt.Errorf("Error preparing SQL: %v", err)
 	}
@@ -155,6 +167,7 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 	}
 	var imported, skipped int
 	for _, ware := range wares.Wares {
+		// wares
 		var namePageId, nameTextId, descPageId, descTextId sql.NullInt64
 		var rawName, specialist sql.NullString
 		namePageId.Int64, nameTextId.Int64, err = text.ParseTextRef(ware.Name)
@@ -187,13 +200,73 @@ func read(database *importing.ImportDb, waresFileName string, verbose bool) erro
 			ware.Price.Min,
 			ware.Price.Average,
 			ware.Price.Max,
+			ware.Container.Ref,
+			ware.Icon.Active,
+			ware.Restriction.Sell,
 		)
 		if err != nil {
 			log.Printf("DB error: %v", err)
 			skipped++
 		}
 		imported++
+
+		// productions
+		for _, production := range ware.Production {
+			namePageId.Int64, nameTextId.Int64, err = text.ParseTextRef(production.Name)
+			if err != nil {
+				namePageId.Valid, nameTextId.Valid = false, false
+			}
+			_, err := insertProduction.Exec(
+				ware.Id,
+				production.Method,
+				production.Time,
+				production.Amount,
+				namePageId,
+				nameTextId,
+			)
+			if err != nil {
+				log.Printf("DB Error on production %s: %v", ware.Id, err)
+			}
+			// production wares
+			for _, productionWare := range production.Primary {
+				_, err := insertProductionWare.Exec(
+					ware.Id,
+					production.Method,
+					true,
+					productionWare.Ware,
+					productionWare.Amount,
+				)
+				if err != nil {
+					log.Printf("DB Error on production ware %s %s: %v", ware.Id, productionWare.Ware, err)
+				}
+			}
+			for _, productionWare := range production.Secondary {
+				_, err := insertProductionWare.Exec(
+					ware.Id,
+					production.Method,
+					false,
+					productionWare.Ware,
+					productionWare.Amount,
+				)
+				if err != nil {
+					log.Printf("DB Error on production ware %s %s: %v", ware.Id, productionWare.Ware, err)
+				}
+			}
+			// production effects
+			for _, productionEffect := range production.Effects {
+				_, err := insertProductionEffect.Exec(
+					ware.Id,
+					production.Method,
+					productionEffect.Type,
+					productionEffect.Product,
+				)
+				if err != nil {
+					log.Printf("DB Error on production effect %s %s: %v", ware.Id, productionEffect.Type, err)
+				}
+			}
+		}
 	}
+	log.Printf("%d wares imported, %d skipped.", imported, skipped)
 	return nil
 }
 

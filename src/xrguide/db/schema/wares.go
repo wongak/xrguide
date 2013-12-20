@@ -18,7 +18,10 @@ CREATE TABLE wares (
 	volume INTEGER,
 	price_min INTEGER,
 	price_average INTEGER,
-	price_max INTEGER
+	price_max INTEGER,
+	container VARCHAR(64),
+	icon VARCHAR(128),
+	restriction_sell FLOAT
 /* FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (description_page_id, description_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE */
 )
@@ -34,8 +37,8 @@ CREATE TABLE wares_productions (
 	method VARCHAR(64),
 	time INTEGER,
 	amount INTEGER,
-	name_page_id INTEGER NOT NULL,
-	name_text_id INTEGER NOT NULL,
+	name_page_id INTEGER,
+	name_text_id INTEGER,
 	PRIMARY KEY (ware_id, method)
 /*	FOREIGN KEY (ware_id) REFERENCES wares(id) ON DELETE RESTRICT ON UPDATE CASCADE,
 	FOREIGN KEY (name_page_id, name_text_id) REFERENCES text_entries(page_id, text_id) ON DELETE RESTRICT ON UPDATE CASCADE */
@@ -82,6 +85,15 @@ DROP INDEX wares_specialist
 	`
 DROP INDEX wares_size
 	`,
+	`
+DROP INDEX wares_container
+	`,
+	`
+DROP INDEX wares_production_effects_production
+	`,
+	`
+DROP INDEX wares_production_wares_production
+	`,
 }
 
 var WaresCreateIndexes = []string{
@@ -94,6 +106,15 @@ CREATE INDEX wares_specialist ON wares (specialist)
 	`
 CREATE INDEX wares_size ON wares (size)
 	`,
+	`
+CREATE INDEX wares_container ON wares (container)
+	`,
+	`
+CREATE INDEX wares_production_effects_production ON wares_production_effects (ware_id, method)
+	`,
+	`
+CREATE INDEX wares_production_wares_production ON wares_production_wares (ware_id, method)
+	`,
 }
 
 var WaresReset = []*string{
@@ -103,9 +124,11 @@ var WaresReset = []*string{
 	&WaresCreateProductions,
 	&WaresDropProductionWares,
 	&WaresCreateProductionWares,
+	&WaresDropProductionEffects,
+	&WaresCreateProductionEffects,
 }
 
-var WareInsertWare = `
+const WaresInsertWare = `
 INSERT INTO wares
 (
 id, 
@@ -120,8 +143,50 @@ size,
 volume ,
 price_min ,
 price_average ,
-price_max 
+price_max,
+container,
+icon,
+restriction_sell
 )
 VALUES
-(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`
+
+const WaresInsertProduction = `
+INSERT INTO wares_productions
+(
+	ware_id, 
+	method, 
+	time, 
+	amount, 
+	name_page_id, 
+	name_text_id
+)
+VALUES
+(?, ?, ?, ?, ?, ?)
+`
+
+const WaresInsertProductionWare = `
+INSERT INTO wares_production_wares
+(
+	ware_id,
+	method,
+	is_primary,
+	ware,
+	amount
+)
+VALUES
+(?, ?, ?, ?, ?)
+`
+
+const WaresInsertProductionEffect = `
+INSERT INTO wares_production_effects
+(
+	ware_id,
+	method,
+	type,
+	product
+)
+VALUES
+(?, ?, ?, ?)
 `
