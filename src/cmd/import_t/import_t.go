@@ -29,6 +29,8 @@ var verbose = flag.Bool("v", false, "Verbose output.")
 var lang = flag.Int64("l", 0, "Language Id. If not specified all.")
 var page = flag.Int64("p", 0, "Page Id. If not specified all.")
 var workers = flag.Int("w", 10, "Number of pages to process concurrently.")
+var refs = flag.Bool("refs", false, "If this flag is set text references will be updated. No importing.")
+var comments = flag.Bool("c", false, "If this flag is set text comments will be removed. No importing.")
 
 func main() {
 	flag.Parse()
@@ -67,10 +69,29 @@ func main() {
 		}
 	}
 	defer db.Close()
-	err = read(database, *textDir, *verbose, *lang, *page)
-	if err != nil {
-		log.Print(err)
-		os.Exit(1)
+	if *refs || *comments {
+		if *refs {
+			log.Print("Updating references.")
+			err = text.UpdateReferences(db)
+			if err != nil {
+				log.Printf("Error updating: %v", err)
+				os.Exit(1)
+			}
+		}
+		if *comments {
+			log.Print("Updating comments. Will only print commented text.")
+			err = text.UpdateComments(db)
+			if err != nil {
+				log.Printf("Error updating: %v", err)
+				os.Exit(1)
+			}
+		}
+	} else {
+		err = read(database, *textDir, *verbose, *lang, *page)
+		if err != nil {
+			log.Print(err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -110,7 +131,6 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 				select {
 				case w := <-work:
 					if w == nil {
-						db.Close()
 						return
 					}
 					stmt, err := db.Prepare(schema.TextInsert)
@@ -232,6 +252,16 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 	}
 	working.Wait()
 	close(work)
+
+	log.Print("Updating references...")
+	db, err := database.Db()
+	if err != nil {
+		return fmt.Errorf("Error connecting to db: %v", err)
+	}
+	err = text.UpdateReferences(db)
+	if err != nil {
+		log.Printf("Error while updating references: %v", err)
+	}
 	return nil
 }
 
