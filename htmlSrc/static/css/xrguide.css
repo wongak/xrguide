@@ -1,12 +1,11 @@
 body{
-    padding-top: 70px;
+	padding-top:70px;
 }
 div.navbar{
     background-image:url(/img/header_x_rebirth_01.jpg);
     background-position: top right;
     background-repeat:no-repeat;
 }
-
 footer{
     padding-top: 40px;
     padding-bottom: 30px;

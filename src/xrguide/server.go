@@ -16,6 +16,8 @@ type Server struct {
 	martini.Router
 
 	htmlSrcDir string
+
+	wares *WaresHandler
 }
 
 func NewServer(db *sql.DB, htmlSrcDir string) (*Server, error) {
@@ -35,6 +37,7 @@ func NewServer(db *sql.DB, htmlSrcDir string) (*Server, error) {
 
 		htmlSrcDir: htmlSrcDir,
 	}
+	s.wares = NewWaresHandler(s)
 	err := s.initDefaults()
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing server: %v", err)

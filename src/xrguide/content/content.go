@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-type XRModDirContent struct {
+type XRGuideContent struct {
 	Data map[string]interface{}
 }
 
-func NewContent() *XRModDirContent {
+func NewContent() *XRGuideContent {
 	m := make(map[string]interface{})
-	c := &XRModDirContent{
+	c := &XRGuideContent{
 		Data: m,
 	}
 	c.Data["title"] = "X Rebirth Guide"
