@@ -101,4 +101,6 @@ func languageCookie(r *http.Request, w http.ResponseWriter, c *content.XRGuideCo
 	}
 	c.Data["lang"] = lang
 	ctx.Map(c)
+
+	ctx.Next()
 }
