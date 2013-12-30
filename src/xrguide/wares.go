@@ -54,7 +54,6 @@ func (w *WaresHandler) GetWares(
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
-	resp.WriteHeader(http.StatusOK)
 }
 
 func NewWaresHandler(s *Server) *WaresHandler {
