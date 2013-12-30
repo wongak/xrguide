@@ -3,6 +3,7 @@ package xrguide
 import (
 	"bytes"
 	"database/sql"
+	"github.com/codegangsta/martini"
 	"html/template"
 	"log"
 	"net/http"
@@ -23,10 +24,14 @@ func setHandlers(s *Server) {
 	s.Get("/about", about)
 }
 
-func handlePage(templateName string, t *template.Template, l *log.Logger) (respCode int, body string) {
+func handlePage(
+	templateName string,
+	t *template.Template,
+	l *log.Logger,
+	c *content.XRGuideContent,
+) (respCode int, body string) {
 	var buf bytes.Buffer
 	respCode = http.StatusOK
-	c := content.NewContent()
 	err := t.ExecuteTemplate(&buf, templateName, c)
 	if err != nil {
 		log.Printf("Template error: %v", err)
@@ -41,16 +46,18 @@ func handlePage(templateName string, t *template.Template, l *log.Logger) (respC
 func index(
 	t *template.Template,
 	l *log.Logger,
+	c *content.XRGuideContent,
 ) (int, string) {
-	return handlePage("index.tmpl.html", t, l)
+	return handlePage("index.tmpl.html", t, l, c)
 }
 
 // About page
 func about(
 	t *template.Template,
 	l *log.Logger,
+	c *content.XRGuideContent,
 ) (respCode int, body string) {
-	return handlePage("about.tmpl.html", t, l)
+	return handlePage("about.tmpl.html", t, l, c)
 }
 
 func setLangCookie(langId int64, w http.ResponseWriter) {
@@ -62,7 +69,7 @@ func setLangCookie(langId int64, w http.ResponseWriter) {
 }
 
 // Language Cookie Middleware
-func languageCookie(r *http.Request, w http.ResponseWriter, c *content.XRGuideContent, db *sql.DB) {
+func languageCookie(r *http.Request, w http.ResponseWriter, c *content.XRGuideContent, db *sql.DB, ctx martini.Context) {
 	langCookie, err := r.Cookie(LANGUAGE_COOKIE_NAME)
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -75,16 +82,23 @@ func languageCookie(r *http.Request, w http.ResponseWriter, c *content.XRGuideCo
 	langId, err := strconv.ParseInt(langCookie.Value, 10, 64)
 	if err != nil {
 		log.Printf("Invalid value in cookie: %v", err)
+		setLangCookie(DEFAULT_LANGUAGE, w)
 		return
 	}
 	lang, err := language.LanguageById(db, langId)
 	if err != nil {
 		log.Printf("Error retrieving language: %v", err)
-		return
-	}
-	if lang == nil {
 		setLangCookie(DEFAULT_LANGUAGE, w)
 		return
 	}
-	setLangCookie(lang.Id, w)
+	if lang == nil {
+		lang, err = language.LanguageById(db, DEFAULT_LANGUAGE)
+		if err != nil {
+			log.Printf("Error retrieving default language: %v", err)
+			return
+		}
+		setLangCookie(lang.Id, w)
+	}
+	c.Data["lang"] = lang
+	ctx.Map(c)
 }
