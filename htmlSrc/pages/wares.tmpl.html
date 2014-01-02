@@ -1,5 +1,32 @@
 {{template "head" .}}
 {{template "body_start" .}}
 <h1>Wares</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Transport</th>
+            <th>Avg. Price</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{range .Data.wares}}
+        <tr{{if .NameRaw.Valid}} class="hidden"{{end}}>
+            <td><a href="/ware/{{.Id}}">{{.Id}}</a></td>
+            <td{{if .NameRaw.Valid}} class="ware-internal warning"{{end}}>
+                {{if .Name.Valid}}
+                    <a href="/ware/{{.Id}}">{{.Name.String}}</a>
+                {{else if .NameRaw.Valid}}
+                    <a href="/ware/{{.Id}}">({{.NameRaw.String}}</a>
+                {{end}}
+            </td>
+            <td>{{.Transport}}</td>
+            <td>{{.PriceAverage}}</td>
+        </tr>
+    {{end}}
+    </tbody>
+</table>
 {{template "body_end" .}}
 {{template "footer" .}}
