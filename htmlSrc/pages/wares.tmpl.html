@@ -26,6 +26,11 @@
             <td>{{.PriceAverage}}</td>
         </tr>
     {{end}}
+    {{if not .Data.wares}}
+        <tr>
+            <td colspan="4">No matching wares found.</td>
+        </tr>
+    {{end}}
     </tbody>
 </table>
 {{template "body_end" .}}

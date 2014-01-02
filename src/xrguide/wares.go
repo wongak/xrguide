@@ -3,6 +3,7 @@ package xrguide
 import (
 	"database/sql"
 	"fmt"
+	"github.com/codegangsta/martini"
 	"html/template"
 	"log"
 	"net/http"
@@ -21,6 +22,7 @@ type WaresHandler struct {
 
 func (w *WaresHandler) registerRoutes() {
 	w.s.Get("/wares", w.GetWares)
+	w.s.Get("/ware/:id", w.GetWare)
 }
 
 func (w *WaresHandler) GetWares(
@@ -60,4 +62,15 @@ func NewWaresHandler(s *Server) *WaresHandler {
 	h := &WaresHandler{s}
 	h.registerRoutes()
 	return h
+}
+
+func (w *WaresHandler) GetWare(
+	db *sql.DB,
+	tmpl *template.Template,
+	c *content.XRGuideContent,
+	r *http.Request,
+	resp http.ResponseWriter,
+	l *log.Logger,
+	params martini.Params,
+) {
 }
