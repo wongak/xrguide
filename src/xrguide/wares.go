@@ -2,13 +2,11 @@ package xrguide
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/codegangsta/martini"
 	"html/template"
 	"log"
 	"net/http"
 	"xrguide/content"
-	"xrguide/entity/language"
 	"xrguide/entity/ware"
 )
 
@@ -33,16 +31,8 @@ func (w *WaresHandler) GetWares(
 	resp http.ResponseWriter,
 	l *log.Logger,
 ) {
-	var err error
-	lEntry, ok := c.Data["lang"]
-	if !ok {
-		err = fmt.Errorf("Language not set in content.")
-		content.HandleError(err, l, tmpl, resp)
-		return
-	}
-	lang, ok := lEntry.(*language.Language)
-	if !ok {
-		err = fmt.Errorf("Error on cast language.")
+	lang, err := contentLanguage(c)
+	if err != nil {
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
@@ -73,4 +63,24 @@ func (w *WaresHandler) GetWare(
 	l *log.Logger,
 	params martini.Params,
 ) {
+	lang, err := contentLanguage(c)
+	if err != nil {
+		content.HandleError(err, l, tmpl, resp)
+		return
+	}
+	wareId, ok := params["id"]
+	if !ok {
+		resp.WriteHeader(http.StatusNotFound)
+		return
+	}
+	c.Data["ware"], err = ware.GetWare(db, lang.Id, wareId)
+	if err != nil {
+		content.HandleError(err, l, tmpl, resp)
+		return
+	}
+	err = tmpl.ExecuteTemplate(resp, "ware.tmpl.html", c)
+	if err != nil {
+		content.HandleError(err, l, tmpl, resp)
+		return
+	}
 }

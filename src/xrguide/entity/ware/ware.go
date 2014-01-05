@@ -12,12 +12,13 @@ type Ware struct {
 	Description  sql.NullString
 	NameRaw      sql.NullString
 	Transport    string
-	Specialist   string
+	Specialist   sql.NullString
 	Size         string
 	Volume       int
 	PriceMin     int
 	PriceAverage int
 	PriceMax     int
+	Container    string
 	Icon         string
 }
 
@@ -42,7 +43,11 @@ func WaresOverview(db *sql.DB, languageId int64, order func() string) ([]*Ware, 
 
 func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 	q := query.WaresSelectWare
-	_ = db.QueryRow(q, languageId, languageId, wareId)
+	row := db.QueryRow(q, languageId, languageId, wareId)
 	ware := new(Ware)
+	err := row.Scan(&ware.Id, &ware.Name, &ware.Description, &ware.NameRaw, &ware.Transport, &ware.Specialist, &ware.Size, &ware.Volume, &ware.PriceMin, &ware.PriceAverage, &ware.PriceMax, &ware.Container, &ware.Icon)
+	if err != nil {
+		return nil, fmt.Errorf("Error scanning ware: %v", err)
+	}
 	return ware, nil
 }

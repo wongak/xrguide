@@ -3,6 +3,7 @@ package xrguide
 import (
 	"bytes"
 	"database/sql"
+	"fmt"
 	"github.com/codegangsta/martini"
 	"html/template"
 	"log"
@@ -103,4 +104,18 @@ func languageCookie(r *http.Request, w http.ResponseWriter, c *content.XRGuideCo
 	ctx.Map(c)
 
 	ctx.Next()
+}
+
+func contentLanguage(c *content.XRGuideContent) (lang *language.Language, err error) {
+	lEntry, ok := c.Data["lang"]
+	if !ok {
+		err = fmt.Errorf("Language not set in content.")
+		return
+	}
+	lang, ok = lEntry.(*language.Language)
+	if !ok {
+		err = fmt.Errorf("Error on cast language.")
+		return
+	}
+	return
 }
