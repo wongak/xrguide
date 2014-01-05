@@ -2,6 +2,7 @@ body{
 	padding-top:70px;
 }
 div.navbar{
+    background-color: #272b30;
     background-image:url(/img/header_x_rebirth_01.jpg);
     background-position: top right;
     background-repeat:no-repeat;
