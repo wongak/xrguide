@@ -18,8 +18,9 @@
             <td{{if .NameRaw.Valid}} class="ware-internal warning"{{end}}>
                 {{if .Name.Valid}}
                     <a href="/ware/{{.Id}}">{{.Name.String}}</a>
-                {{else if .NameRaw.Valid}}
+                {{else}}{{if .NameRaw.Valid}}
                     <a href="/ware/{{.Id}}">({{.NameRaw.String}}</a>
+                {{end}}
                 {{end}}
             </td>
             <td>{{.Transport}}</td>
