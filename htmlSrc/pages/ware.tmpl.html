@@ -2,24 +2,45 @@
 {{template "body_start" .}}
 <div class="ware">
     <h1>{{if .Data.ware.Name.Valid}}{{.Data.ware.Name.String}}{{else if .Data.ware.NameRaw.Valid}}{{.Data.ware.NameRaw.String}}{{end}}</h1>
-    <dl class="datasheet dl-horizontal panel">
-        <dt>Transport</dt>
-        <dd>{{.Data.ware.Transport}}</dd>
-        <dt>Specialist</dt>
-        <dd>{{if .Data.ware.Specialist.Valid}}{{.Data.ware.Specialist.String}}{{else}}-{{end}}</dd>
-        <dt>Size</dt>
-        <dd>{{.Data.ware.Size}}</dd>
-        <dt>Volume</dt>
-        <dd>{{.Data.ware.Volume}}</dd>
-        <dt>Price Min.</dt>
-        <dd>{{.Data.ware.PriceMin}}</dd>
-        <dt>Price Avg.</dt>
-        <dd>{{.Data.ware.PriceAverage}}</dd>
-        <dt>Price Max.</dt>
-        <dd>{{.Data.ware.PriceMax}}</dd>
-        <dt>Container</dt>
-        <dd>{{.Data.ware.Container}}</dd>
-    </dl>
+    <div class="datasheet panel">
+        <h2>Datasheet</h2>
+        <dl class="dl-horizontal">
+            <dt>Transport</dt>
+            <dd>{{.Data.ware.Transport}}</dd>
+            <dt>Specialist</dt>
+            <dd>{{if .Data.ware.Specialist.Valid}}{{.Data.ware.Specialist.String}}{{else}}-{{end}}</dd>
+            <dt>Size</dt>
+            <dd>{{.Data.ware.Size}}</dd>
+            <dt>Volume</dt>
+            <dd>{{.Data.ware.Volume}}</dd>
+            <dt>Price Min.</dt>
+            <dd>{{.Data.ware.PriceMin}}</dd>
+            <dt>Price Avg.</dt>
+            <dd>{{.Data.ware.PriceAverage}}</dd>
+            <dt>Price Max.</dt>
+            <dd>{{.Data.ware.PriceMax}}</dd>
+            <dt>Container</dt>
+            <dd>{{.Data.ware.Container}}</dd>
+        </dl>
+    </div>
+    <div class="production panel">
+        <h2>Production</h2>
+    {{range .Data.ware.Productions}}
+        <h3>Method: {{.Method}}</h3>
+        <dl class="dl-horizontal">
+            <dt>Time</dt>
+            <dd>{{.Time}}</dd>
+            <dt>Amount</dt>
+            <dd>{{.Amount}}</dd>
+            {{if .Text.Valid}}
+            <dt>Info</dt>
+            <dd>{{.Text.String}}</dd>
+            {{end}}
+        </dl>
+    {{else}}
+        <p class="text-warning">No production info for this ware.</p>
+    {{end}}
+    </div>
 </div>
 {{template "body_end" .}}
 {{template "footer" .}}
