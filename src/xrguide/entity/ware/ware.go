@@ -22,6 +22,7 @@ type Ware struct {
 	Icon         string
 
 	Productions map[string]*Production
+	UsedIn      []*Ware
 }
 
 type Production struct {
@@ -125,6 +126,20 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 			continue
 		}
 		ware.Productions[stat.Method].Stat = stat
+	}
+	// used in
+	usedIn, err := db.Query(query.WaresSelectUsedIn, languageId, wareId)
+	if err != nil {
+		return nil, fmt.Errorf("Error querying used in: %v", err)
+	}
+	ware.UsedIn = make([]*Ware, 0)
+	for usedIn.Next() {
+		used := new(Ware)
+		err = usedIn.Scan(&used.Id, &used.Name, &used.NameRaw)
+		if err != nil {
+			return nil, fmt.Errorf("Error scanning used in: %v", err)
+		}
+		ware.UsedIn = append(ware.UsedIn, used)
 	}
 	return ware, nil
 }

@@ -100,6 +100,9 @@ DROP INDEX wares_production_effects_production
 	`
 DROP INDEX wares_production_wares_production
 	`,
+	`
+DROP INDEX wares_production_wares_ware
+	`,
 }
 
 var WaresCreateIndexes = []string{
@@ -126,6 +129,9 @@ CREATE INDEX wares_production_effects_production ON wares_production_effects (wa
 	`,
 	`
 CREATE INDEX wares_production_wares_production ON wares_production_wares (ware_id, method)
+	`,
+	`
+CREATE INDEX wares_production_wares_ware ON wares_production_wares (ware)
 	`,
 }
 

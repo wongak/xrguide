@@ -118,3 +118,23 @@ WHERE
 	wares.id = ?
 GROUP BY wares_productions.ware_id, wares_productions.method
 `
+
+const WaresSelectUsedIn = `
+SELECT
+	wares.id,
+	name_text.text,
+	wares.name_raw
+FROM wares_production_wares
+INNER JOIN wares ON
+	wares.id = wares_production_wares.ware_id
+LEFT JOIN text_entries AS name_text ON
+	name_text.language_id = ?
+	AND
+	name_text.page_id = wares.name_page_id
+	AND
+	name_text.text_id = wares.name_text_id
+WHERE
+	wares_production_wares.ware = ?
+GROUP BY wares.id
+ORDER BY name_text.text
+`

@@ -81,6 +81,16 @@
         <p class="text-warning">No production info for this ware.</p>
     {{end}}
     </div>
+    {{if .Data.ware.UsedIn}}
+    <div class="ware-used-in panel panel-default">
+        <h2>Used in</h2>
+        <ul>
+            {{range .Data.ware.UsedIn}}
+            <li{{if not .Name.Valid}} class="hidden ware-internal"{{end}}><a href="/ware/{{.Id}}">{{if .Name.Valid}}{{.Name.String}}{{else if .NameRaw.Valid}}{{.NameRaw.String}}{{end}}</a></li>
+            {{end}}
+        </ul>
+    </div>
+    {{end}}
 </div>
 {{template "body_end" .}}
 {{template "footer" .}}
