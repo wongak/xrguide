@@ -20,6 +20,15 @@ type Ware struct {
 	PriceMax     int
 	Container    string
 	Icon         string
+
+	Productions map[string]*Production
+}
+
+type Production struct {
+	Method string
+	Time   int
+	Amount int
+	Text   sql.NullString
 }
 
 func WaresOverview(db *sql.DB, languageId int64, order func() string) ([]*Ware, error) {
@@ -48,6 +57,20 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 	err := row.Scan(&ware.Id, &ware.Name, &ware.Description, &ware.NameRaw, &ware.Transport, &ware.Specialist, &ware.Size, &ware.Volume, &ware.PriceMin, &ware.PriceAverage, &ware.PriceMax, &ware.Container, &ware.Icon)
 	if err != nil {
 		return nil, fmt.Errorf("Error scanning ware: %v", err)
+	}
+	ware.Productions = make(map[string]*Production)
+	q = query.WaresSelectProductions
+	rows, err := db.Query(q, languageId, wareId)
+	if err != nil {
+		return nil, fmt.Errorf("Error querying ware production: %v", err)
+	}
+	for rows.Next() {
+		prod := new(Production)
+		err = rows.Scan(&prod.Method, &prod.Time, &prod.Amount, &prod.Text)
+		if err != nil {
+			return nil, fmt.Errorf("Error scanning ware production: %v", err)
+		}
+		ware.Productions[prod.Method] = prod
 	}
 	return ware, nil
 }

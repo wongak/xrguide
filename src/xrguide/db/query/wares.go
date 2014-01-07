@@ -48,3 +48,22 @@ LEFT JOIN text_entries AS description_text ON
 WHERE
 	wares.id = ?
 `
+
+const WaresSelectProductions = `
+SELECT
+	wares_productions.method,
+	wares_productions.time,
+	wares_productions.amount,
+	name_text.text
+FROM
+	wares_productions
+LEFT JOIN text_entries AS name_text ON
+	name_text.language_id = ?
+	AND
+	name_text.page_id = wares_productions.name_page_id
+	AND
+	name_text.text_id = wares_productions.name_text_id
+WHERE
+	wares_productions.ware_id = ?
+ORDER BY wares_productions.method, name_text.text
+`
