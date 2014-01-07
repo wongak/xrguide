@@ -2,6 +2,11 @@
 {{template "body_start" .}}
 <div class="ware">
     <h1>{{if .Data.ware.Name.Valid}}{{.Data.ware.Name.String}}{{else if .Data.ware.NameRaw.Valid}}{{.Data.ware.NameRaw.String}}{{end}}</h1>
+    {{if .Data.ware.Description.Valid}}
+    <div class="description panel panel-default">
+        <p>{{.Data.ware.Description.String}}</p>
+    </div>
+    {{end}}
     <div class="datasheet panel panel-default">
         <h2>Datasheet</h2>
         <dl class="dl-horizontal">
