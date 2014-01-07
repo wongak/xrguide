@@ -31,12 +31,23 @@ type Production struct {
 	Text   sql.NullString
 
 	Wares []*ProductionWare
+	Stat  *ProductionStats
+}
+
+type ProductionStats struct {
+	Method           string
+	TotalAverage     int
+	ProductionValue  int
+	AverageYield     int
+	AverageYieldPerH float32
 }
 
 type ProductionWare struct {
 	Primary bool
 	Ware    *Ware
 	Amount  int
+
+	AverageCost int
 }
 
 func WaresOverview(db *sql.DB, languageId int64, order func() string) ([]*Ware, error) {
@@ -74,7 +85,7 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 	}
 	productionWares, err := db.Prepare(query.WaresSelectProductionWares)
 	if err != nil {
-		return nil, fmt.Errorf("Error querying production wares: %v", err)
+		return nil, fmt.Errorf("Error preparing querying production wares: %v", err)
 	}
 	for rows.Next() {
 		prod := new(Production)
@@ -82,6 +93,7 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Error scanning ware production: %v", err)
 		}
+		// select production wares
 		wares, err := productionWares.Query(languageId, wareId, prod.Method)
 		if err != nil {
 			return nil, fmt.Errorf("Error querying production wares: %v", err)
@@ -90,13 +102,29 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 		for wares.Next() {
 			prodWare := new(ProductionWare)
 			prodWare.Ware = new(Ware)
-			err = wares.Scan(&prodWare.Primary, &prodWare.Ware.Id, &prodWare.Ware.Name, &prodWare.Amount)
+			err = wares.Scan(&prodWare.Primary, &prodWare.Ware.Id, &prodWare.Ware.Name, &prodWare.Amount, &prodWare.AverageCost)
 			if err != nil {
 				return nil, fmt.Errorf("Error scanning production ware: %v", err)
 			}
 			prod.Wares = append(prod.Wares, prodWare)
 		}
 		ware.Productions[prod.Method] = prod
+	}
+	// efficiency
+	productionEfficiency, err := db.Query(query.WaresSelectProductionEfficiency, wareId)
+	if err != nil {
+		return nil, fmt.Errorf("Error querying efficiency: %v", err)
+	}
+	for productionEfficiency.Next() {
+		stat := new(ProductionStats)
+		err = productionEfficiency.Scan(&stat.Method, &stat.TotalAverage, &stat.ProductionValue, &stat.AverageYield, &stat.AverageYieldPerH)
+		if err != nil {
+			return nil, fmt.Errorf("Error scanning production stats: %v", err)
+		}
+		if _, ok := ware.Productions[stat.Method]; !ok {
+			continue
+		}
+		ware.Productions[stat.Method].Stat = stat
 	}
 	return ware, nil
 }

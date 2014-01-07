@@ -30,3 +30,6 @@ footer{
 .panel{
     padding:1em;
 }
+.number{
+    text-align: right;
+}

@@ -73,7 +73,8 @@ SELECT
 	w.is_primary,
 	w.ware,
 	name_text.text,
-	w.amount
+	w.amount,
+	w.amount * wares.price_average
 FROM
 	wares_productions
 INNER JOIN wares_production_wares AS w ON
@@ -81,7 +82,7 @@ INNER JOIN wares_production_wares AS w ON
 	AND
 	w.method = wares_productions.method
 INNER JOIN wares ON
-	w.ware = wares.id
+	wares.id = w.ware
 LEFT JOIN text_entries AS name_text ON
 	name_text.language_id = ?
 	AND
@@ -93,4 +94,27 @@ WHERE
 	AND
 	wares_productions.method = ?
 ORDER BY w.is_primary DESC, name_text.text
+`
+
+const WaresSelectProductionEfficiency = `
+SELECT
+	wares_productions.method,
+	SUM(prod.price_average * w.amount) AS total_cost,
+	wares_productions.amount * wares.price_average AS production_value,
+	(wares_productions.amount * wares.price_average) - SUM(prod.price_average * w.amount) AS average_yield,
+	3600 / wares_productions.time * ((wares_productions.amount * wares.price_average) - SUM(prod.price_average * w.amount)) AS average_yield_per_hour
+FROM wares
+INNER JOIN wares_productions ON
+	wares_productions.ware_id = wares.id
+INNER JOIN wares_production_wares AS w ON
+	w.ware_id = wares_productions.ware_id
+	AND
+	w.method = wares_productions.method
+	AND
+	w.is_primary = 1
+INNER JOIN wares AS prod ON
+	prod.id = w.ware
+WHERE
+	wares.id = ?
+GROUP BY wares_productions.ware_id, wares_productions.method
 `
