@@ -37,9 +37,9 @@
             <dd>{{.Text.String}}</dd>
             {{end}}
             {{if .Stat}}
-            <dt><dfn title="Average Yield - Sum of Average Cost">Production Value</dfn></dt>
+            <dt><dfn title="Amount * Average Price">Production Value</dfn></dt>
             <dd>{{.Stat.ProductionValue}}</dd>
-            <dt><dfn title="Amount * Average Price">Average Yield</dfn></dt>
+            <dt><dfn title="Production Value - Sum of Average Cost">Average Yield</dfn></dt>
             <dd>{{.Stat.AverageYield}}</dd>
             <dt>Average Yield/h</dt>
             <dd>{{.Stat.AverageYieldPerH}}</dd>
