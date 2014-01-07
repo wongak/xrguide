@@ -2,7 +2,7 @@
 {{template "body_start" .}}
 <div class="ware">
     <h1>{{if .Data.ware.Name.Valid}}{{.Data.ware.Name.String}}{{else if .Data.ware.NameRaw.Valid}}{{.Data.ware.NameRaw.String}}{{end}}</h1>
-    <div class="datasheet panel">
+    <div class="datasheet panel panel-default">
         <h2>Datasheet</h2>
         <dl class="dl-horizontal">
             <dt>Transport</dt>
@@ -23,7 +23,7 @@
             <dd>{{.Data.ware.Container}}</dd>
         </dl>
     </div>
-    <div class="production panel">
+    <div class="production panel panel-default">
         <h2>Production</h2>
     {{range .Data.ware.Productions}}
         <h3>Method: {{.Method}}</h3>
@@ -37,6 +37,28 @@
             <dd>{{.Text.String}}</dd>
             {{end}}
         </dl>
+        {{if .Wares}}
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Primary</th>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+        {{range .Wares}}
+                <tr{{if .Primary}} class="success"{{end}}>
+                    <td>{{if .Primary}}Y{{else}}N{{end}}</td>
+                    <td><a href="/ware/{{.Ware.Id}}">{{.Ware.Id}}</a></td>
+                    <td{{if not .Ware.Name.Valid}} class="warning"{{end}}>{{if .Ware.Name.Valid}}<a href="/ware/{{.Ware.Id}}">{{.Ware.Name.String}}</a>{{else}}?{{end}}</td>
+                    <td>{{.Amount}}</td>
+                </tr>
+        {{end}}
+            </tbody>
+        </table>
+        {{end}}
     {{else}}
         <p class="text-warning">No production info for this ware.</p>
     {{end}}

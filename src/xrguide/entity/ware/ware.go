@@ -29,6 +29,14 @@ type Production struct {
 	Time   int
 	Amount int
 	Text   sql.NullString
+
+	Wares []*ProductionWare
+}
+
+type ProductionWare struct {
+	Primary bool
+	Ware    *Ware
+	Amount  int
 }
 
 func WaresOverview(db *sql.DB, languageId int64, order func() string) ([]*Ware, error) {
@@ -64,11 +72,29 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error querying ware production: %v", err)
 	}
+	productionWares, err := db.Prepare(query.WaresSelectProductionWares)
+	if err != nil {
+		return nil, fmt.Errorf("Error querying production wares: %v", err)
+	}
 	for rows.Next() {
 		prod := new(Production)
 		err = rows.Scan(&prod.Method, &prod.Time, &prod.Amount, &prod.Text)
 		if err != nil {
 			return nil, fmt.Errorf("Error scanning ware production: %v", err)
+		}
+		wares, err := productionWares.Query(languageId, wareId, prod.Method)
+		if err != nil {
+			return nil, fmt.Errorf("Error querying production wares: %v", err)
+		}
+		prod.Wares = make([]*ProductionWare, 0)
+		for wares.Next() {
+			prodWare := new(ProductionWare)
+			prodWare.Ware = new(Ware)
+			err = wares.Scan(&prodWare.Primary, &prodWare.Ware.Id, &prodWare.Ware.Name, &prodWare.Amount)
+			if err != nil {
+				return nil, fmt.Errorf("Error scanning production ware: %v", err)
+			}
+			prod.Wares = append(prod.Wares, prodWare)
 		}
 		ware.Productions[prod.Method] = prod
 	}
