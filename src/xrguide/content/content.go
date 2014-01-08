@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -29,4 +30,12 @@ func HandleError(err error, log *log.Logger, t *template.Template, w http.Respon
 	if tmplErr != nil {
 		log.Printf("Template error on error page :/ (%v)", tmplErr)
 	}
+}
+
+func HandleHttpError(err error, status int, log *log.Logger, w http.ResponseWriter) {
+	ts := time.Now().UTC().UnixNano()
+	log.Printf("Error [%d]", ts)
+	log.Printf("Errorinfo: %v", err)
+	w.WriteHeader(status)
+	w.Write([]byte(strconv.FormatInt(ts, 10)))
 }

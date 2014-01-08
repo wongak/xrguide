@@ -2,6 +2,7 @@ package xrguide
 
 import (
 	"database/sql"
+	"encoding/json"
 	"github.com/codegangsta/martini"
 	"html/template"
 	"log"
@@ -36,11 +37,28 @@ func (w *WaresHandler) GetWares(
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
-	c.Data["wares"], err = ware.WaresOverview(db, lang.Id, defaultOverviewOrder)
+	var isJsonRequest bool
+	if r.Header.Get("Accept") == "application/json" {
+		isJsonRequest = true
+	}
+	wares, err := ware.WaresOverview(db, lang.Id, defaultOverviewOrder)
 	if err != nil {
-		content.HandleError(err, l, tmpl, resp)
+		if isJsonRequest {
+			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
+		} else {
+			content.HandleError(err, l, tmpl, resp)
+		}
 		return
 	}
+	if isJsonRequest {
+		encoder := json.NewEncoder(resp)
+		err = encoder.Encode(wares)
+		if err != nil {
+			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
+		}
+		return
+	}
+	c.Data["wares"] = &wares
 	err = tmpl.ExecuteTemplate(resp, "wares.tmpl.html", c)
 	if err != nil {
 		content.HandleError(err, l, tmpl, resp)

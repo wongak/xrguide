@@ -8,21 +8,21 @@ import (
 
 type Ware struct {
 	Id           string
-	Name         sql.NullString
-	Description  sql.NullString
-	NameRaw      sql.NullString
-	Transport    string
-	Specialist   sql.NullString
-	Size         string
-	Volume       int
-	PriceMin     int
-	PriceAverage int
-	PriceMax     int
-	Container    string
-	Icon         string
+	Name         sql.NullString `json:",omitempty"`
+	Description  sql.NullString `json:"-"`
+	NameRaw      sql.NullString `json:",omitempty"`
+	Transport    string         `json:",omitempty"`
+	Specialist   sql.NullString `json:",omitempty"`
+	Size         string         `json:",omitempty"`
+	Volume       int            `json:",omitempty"`
+	PriceMin     int            `json:",omitempty"`
+	PriceAverage int            `json:",omitempty"`
+	PriceMax     int            `json:",omitempty"`
+	Container    string         `json:",omitempty"`
+	Icon         string         `json:",omitempty"`
 
-	Productions map[string]*Production
-	UsedIn      []*Ware
+	Productions map[string]*Production `json:"-"`
+	UsedIn      []*Ware                `json:"-"`
 }
 
 type Production struct {
