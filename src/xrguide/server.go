@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"github.com/codegangsta/martini"
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 	"path"
+	"xrguide/logger"
 )
 
 type Server struct {
@@ -24,7 +26,9 @@ func NewServer(db *sql.DB, htmlSrcDir string) (*Server, error) {
 	// martini initialization
 	r := martini.NewRouter()
 	m := martini.New()
-	m.Use(martini.Logger())
+	l := log.New(os.Stdout, "[xrguide] ", 0)
+	m.Map(l)
+	m.Use(logger.Logger())
 	m.Use(martini.Recovery())
 	m.Action(r.Handle)
 
