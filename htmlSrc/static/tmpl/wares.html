@@ -1,2 +1,22 @@
 <h1>Wares</h1>
-<p>NG</p>
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Transport</th>
+        <th>Avg. Price</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="ware in wares" ng-class="internalClass(ware)">
+    <td><a href="/ware/{{ware.Id}}">{{ware.Id}}</a></td>
+    <td>
+    <a href="/ware/{{ware.Id}}">{{ware.Name.String}}</a>
+    <a href="/ware/{{ware.Id}}">{{ware.NameRaw.String}}</a>
+    </td>
+    <td>{{ware.Transport}}</td>
+    <td class="number">{{ware.PriceAverage | number}}</td>
+    </tr>
+    </tbody>
+</table>

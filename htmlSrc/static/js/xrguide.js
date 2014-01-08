@@ -21,7 +21,7 @@ xrguide.service('Ware', ['$rootScope', function ($rootScope) {
             return wares;
         },
 
-        update: function ($http) {
+        update: function ($http, $scope) {
             $http({
                 method: 'GET',
                 url: '/wares',
@@ -29,7 +29,7 @@ xrguide.service('Ware', ['$rootScope', function ($rootScope) {
                     'Accept': 'application/json'
                 }
             }).success(function (data) {
-                wares = data;
+                $scope.wares = data;
             });
             $rootScope.$broadcast('wares.update');
         }
@@ -54,9 +54,14 @@ var xrguideControllers = angular.module('xrguideControllers', []);
 
 xrguideControllers.controller('WaresListCtrl', ['Ware', '$scope', '$http', function (Ware, $scope, $http) {
     'use strict';
-    Ware.update($http);
+    Ware.update($http, $scope);
+    $scope.internalClass = function (ware) {
+        if (ware.Name.Valid !== undefined && ware.Name.Valid) {
+            return '';
+        }
+        return 'ware-internal warning'
+    };
     $scope.$watch('wares.update', function () {
-        $scope.wares = Ware.wares();
     });
 }]);
 
