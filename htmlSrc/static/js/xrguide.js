@@ -1,4 +1,18 @@
-var xrguide = angular.module('xrguide', []);
+var xrguide = angular.module('xrguide', ['ngRoute', 'xrguideControllers']);
+xrguide.
+    config(function ($routeProvider, $locationProvider) {
+        'use strict';
+        $routeProvider.
+            when('/wares', {
+                templateUrl: '/tmpl/wares.html',
+                controller: 'WaresListCtrl'
+            }).
+            when('/', {
+                templateUrl: '/tmpl/index.html'
+            });
+        $locationProvider.html5Mode(true);
+    });
+
 xrguide.service('Ware', ['$rootScope', function ($rootScope) {
     'use strict';
     var wares = [];
@@ -23,6 +37,8 @@ xrguide.service('Ware', ['$rootScope', function ($rootScope) {
 
     return service;
 }]);
+
+
 xrguide.directive('wareRow', function () {
     'use strict';
     return {
@@ -33,10 +49,14 @@ xrguide.directive('wareRow', function () {
         'templateUrl': '/tmpl/ware.html'
     };
 });
-xrguide.controller('WaresListCtrl', ['Ware', '$scope', '$http', function (Ware, $scope, $http) {
+
+var xrguideControllers = angular.module('xrguideControllers', []);
+
+xrguideControllers.controller('WaresListCtrl', ['Ware', '$scope', '$http', function (Ware, $scope, $http) {
     'use strict';
     Ware.update($http);
     $scope.$watch('wares.update', function () {
         $scope.wares = Ware.wares();
     });
 }]);
+
