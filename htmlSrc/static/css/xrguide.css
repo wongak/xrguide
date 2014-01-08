@@ -1,7 +1,6 @@
 body{
-	padding-top:70px;
 }
-div.navbar{
+nav.navbar{
     background-color: #272b30;
     background-image:url(/img/header_x_rebirth_01.jpg);
     background-position: top right;
@@ -13,10 +12,6 @@ footer{
     margin-top: 100px;
     border-top: 1px solid #555555;
 }
-.navbar{
-    margin: 0 -15px;
-}
-
 .container-fluid {
     padding: 0 15px;
     margin-right: auto;
