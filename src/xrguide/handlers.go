@@ -119,3 +119,7 @@ func contentLanguage(c *content.XRGuideContent) (lang *language.Language, err er
 	}
 	return
 }
+
+func isJsonRequest(r *http.Request) bool {
+	return r.Header.Get("Accept") == "application/json"
+}

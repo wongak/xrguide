@@ -37,20 +37,17 @@ func (w *WaresHandler) GetWares(
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
-	var isJsonRequest bool
-	if r.Header.Get("Accept") == "application/json" {
-		isJsonRequest = true
-	}
 	wares, err := ware.WaresOverview(db, lang.Id, defaultOverviewOrder)
 	if err != nil {
-		if isJsonRequest {
+		if isJsonRequest(r) {
 			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
 		} else {
 			content.HandleError(err, l, tmpl, resp)
 		}
 		return
 	}
-	if isJsonRequest {
+	if isJsonRequest(r) {
+		resp.Header().Add("Content-Type", "application/json")
 		encoder := json.NewEncoder(resp)
 		err = encoder.Encode(wares)
 		if err != nil {
@@ -91,11 +88,25 @@ func (w *WaresHandler) GetWare(
 		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
-	c.Data["ware"], err = ware.GetWare(db, lang.Id, wareId)
+	ware, err := ware.GetWare(db, lang.Id, wareId)
 	if err != nil {
-		content.HandleError(err, l, tmpl, resp)
+		if isJsonRequest(r) {
+			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
+		} else {
+			content.HandleError(err, l, tmpl, resp)
+		}
 		return
 	}
+	if isJsonRequest(r) {
+		resp.Header().Add("Content-Type", "application/json")
+		encoder := json.NewEncoder(resp)
+		err = encoder.Encode(ware)
+		if err != nil {
+			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
+		}
+		return
+	}
+	c.Data["ware"] = ware
 	err = tmpl.ExecuteTemplate(resp, "ware.tmpl.html", c)
 	if err != nil {
 		content.HandleError(err, l, tmpl, resp)

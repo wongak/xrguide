@@ -1,0 +1,50 @@
+<h3>Method: {{production.Method}}</h3>
+<dl class="dl-horizontal">
+    <dt>Time</dt>
+    <dd>{{production.Time}}</dd>
+<!--    <dt>Amount</dt>
+    <dd>{{.Amount}}</dd>
+    {{if .Text.Valid}}
+    <dt>Info</dt>
+    <dd>{{.Text.String}}</dd>
+    {{end}}
+    {{if .Stat}}
+    <dt><dfn title="Amount * Average Price">Production Value</dfn></dt>
+    <dd>{{.Stat.ProductionValue}}</dd>
+    <dt><dfn title="Production Value - Sum of Average Cost">Average Yield</dfn></dt>
+    <dd>{{.Stat.AverageYield}}</dd>
+    <dt>Average Yield/h</dt>
+    <dd>{{.Stat.AverageYieldPerH}}</dd>
+    {{end}}-->
+</dl>
+<!--{{if .Wares}}-->
+<table class="table">
+    <thead>
+    <tr>
+        <th>Primary</th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Amount</th>
+        <th><dfn title="Average Price of Ware * Amount">Average Cost</dfn></th>
+    </tr>
+    </thead>
+    <tbody>
+<!--    {{range .Wares}}
+    <tr{{if .Primary}} class="success"{{end}}>
+    <td>{{if .Primary}}Y{{else}}N{{end}}</td>
+    <td><a href="/ware/{{.Ware.Id}}">{{.Ware.Id}}</a></td>
+    <td{{if not .Ware.Name.Valid}} class="warning"{{end}}>{{if .Ware.Name.Valid}}<a href="/ware/{{.Ware.Id}}">{{.Ware.Name.String}}</a>{{else}}?{{end}}</td>
+    <td class="number">{{.Amount}}</td>
+    <td class="number">{{.AverageCost}}</td>
+    </tr>
+    {{end}}-->
+    </tbody>
+<!--    {{if .Stat}}
+    <tfoot>
+    <tr>
+        <td colspan="4"></td>
+        <td class="number">{{.Stat.TotalAverage}}</td>
+    </tr>
+    </tfoot>
+    {{end}}-->
+</table>

@@ -7,21 +7,63 @@ xrguide.
                 templateUrl: '/tmpl/wares.html',
                 controller: 'WaresListCtrl'
             }).
+            when('/ware/:wareId', {
+                templateUrl: '/tmpl/ware.html',
+                controller: 'WareDetailCtrl'
+            }).
             when('/', {
                 templateUrl: '/tmpl/index.html'
             });
         $locationProvider.html5Mode(true);
     });
 
-xrguide.service('Ware', ['$rootScope', function ($rootScope) {
+xrguide.service('Ware', ['$rootScope', '$http', function ($rootScope, $http) {
     'use strict';
-    var wares = [];
-    var service = {
-        wares: function() {
+    var wares,
+        service,
+        wareDefaults;
+
+    wares = [];
+    wareDefaults = {
+        wareName: function (ware) {
+            if (ware === undefined) {
+                ware = this;
+            }
+            if (ware.Name.Valid !== undefined && ware.Name.Valid) {
+                return ware.Name.String;
+            }
+            if (ware.NameRaw.Valid !== undefined && ware.NameRaw.Valid) {
+                return ware.NameRaw.String;
+            }
+            return '?';
+        },
+
+        wareSpecialist: function (ware) {
+            if (ware === undefined) {
+                ware = this;
+            }
+            if (ware.Specialist.Valid !== undefined && ware.Specialist.Valid) {
+                return ware.Specialist.String;
+            }
+            return '-';
+        },
+
+        wareHasProduction: function (ware) {
+            if (ware === undefined) {
+                ware = this;
+            }
+            if (ware.Productions === undefined) {
+                return false;
+            }
+            return true;
+        }
+    };
+    service = {
+        wares: function () {
             return wares;
         },
 
-        update: function ($http, $scope) {
+        updateWares: function ($scope) {
             $http({
                 method: 'GET',
                 url: '/wares',
@@ -29,39 +71,99 @@ xrguide.service('Ware', ['$rootScope', function ($rootScope) {
                     'Accept': 'application/json'
                 }
             }).success(function (data) {
-                $scope.wares = data;
+                $scope.wares = angular.extend(data, wareDefaults);
+                $rootScope.$broadcast('wares.update');
             });
-            $rootScope.$broadcast('wares.update');
+        },
+
+        getWare: function (wareId, $scope) {
+            $http({
+                method: 'GET',
+                url: '/ware/' + wareId,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).success(function (data) {
+                $scope.ware = angular.extend(data, wareDefaults);
+                $scope.$broadcast('ware.update');
+            });
         }
     };
 
     return service;
 }]);
 
-
-xrguide.directive('wareRow', function () {
-    'use strict';
+xrguide.directive('wareProduction', function () {
     return {
         restrict: 'E',
-        scope: {
-            ware: '='
-        },
-        'templateUrl': '/tmpl/ware.html'
+        templateUrl: '/tmpl/wareProduction.html',
+
     };
-});
+})
 
 var xrguideControllers = angular.module('xrguideControllers', []);
 
-xrguideControllers.controller('WaresListCtrl', ['Ware', '$scope', '$http', function (Ware, $scope, $http) {
+xrguideControllers.controller('WaresListCtrl', ['Ware', '$scope', function (Ware, $scope) {
     'use strict';
-    Ware.update($http, $scope);
-    $scope.internalClass = function (ware) {
+    Ware.updateWares($scope);
+
+    $scope.query = '';
+    $scope.filterInternal = true;
+    $scope.showTranspEquipment = false;
+    $scope.showTranspInventory = false;
+    $scope.showTranspEnergy = true;
+    $scope.showTranspContainer = true;
+    $scope.showTranspBulk = true;
+    $scope.showTranspLiquid = true;
+    $scope.showTranspFuel = true;
+
+    $scope.isInternal = function (ware) {
         if (ware.Name.Valid !== undefined && ware.Name.Valid) {
+            return false;
+        }
+        return true;
+    };
+    $scope.internalClass = function (ware) {
+        if (!$scope.isInternal(ware)) {
             return '';
         }
-        return 'ware-internal warning'
+        return 'ware-internal warning';
     };
-    $scope.$watch('wares.update', function () {
-    });
+    $scope.filterInternalExp = function (ware) {
+        if (!$scope.filterInternal) {
+            return true;
+        }
+        return !$scope.isInternal(ware);
+    };
+    $scope.filterTransports = function (ware) {
+        if (!$scope.showTranspEquipment && ware.Transport === 'equipment') {
+            return false;
+        }
+        if (!$scope.showTranspInventory && ware.Transport === 'inventory') {
+            return false;
+        }
+        if (!$scope.showTranspEnergy && ware.Transport === 'energy') {
+            return false;
+        }
+        if (!$scope.showTranspContainer && ware.Transport === 'container') {
+            return false;
+        }
+        if (!$scope.showTranspBulk && ware.Transport === 'bulk') {
+            return false;
+        }
+        if (!$scope.showTranspLiquid && ware.Transport === 'liquid') {
+            return false;
+        }
+        if (!$scope.showTranspFuel && ware.Transport === 'fuel') {
+            return false;
+        }
+        return true;
+    };
+
+//    $scope.$watch('wares.update', function () {});
 }]);
 
+xrguideControllers.controller('WareDetailCtrl', ['Ware', '$scope', '$routeParams', function (Ware, $scope, $routeParams) {
+    'use strict';
+    Ware.getWare($routeParams.wareId, $scope);
+}]);

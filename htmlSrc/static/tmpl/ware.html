@@ -1,12 +1,81 @@
-<tr{{if .NameRaw.Valid}} class="hidden"{{end}}>
-<td><a href="/ware/{{.Id}}">{{.Id}}</a></td>
-<td{{if .NameRaw.Valid}} class="ware-internal warning"{{end}}>
-{{if .Name.Valid}}
-<a href="/ware/{{.Id}}">{{.Name.String}}</a>
-{{else if .NameRaw.Valid}}
-<a href="/ware/{{.Id}}">({{.NameRaw.String}}</a>
-{{end}}
-</td>
-<td>{{.Transport}}</td>
-<td class="number">{{.PriceAverage}}</td>
-</tr>
+<div class="ware">
+    <h1>{{ware.wareName()}}</h1>
+    <div class="description panel panel-default">
+        <p>{{ware.Description.String}}</p>
+    </div>
+    <div class="datasheet panel panel-default">
+        <h2>Datasheet</h2>
+        <dl class="dl-horizontal">
+            <dt>Transport</dt>
+            <dd>{{ware.Transport}}</dd>
+            <dt>Specialist</dt>
+            <dd>{{ware.wareSpecialist()}}</dd>
+            <dt>Size</dt>
+            <dd>{{ware.Size}}</dd>
+            <dt>Volume</dt>
+            <dd>{{ware.Volume | number}}</dd>
+            <dt>Price Min.</dt>
+            <dd>{{ware.PriceMin | number}}</dd>
+            <dt>Price Avg.</dt>
+            <dd>{{ware.PriceAverage | number}}</dd>
+            <dt>Price Max.</dt>
+            <dd>{{ware.PriceMax | number}}</dd>
+            <dt>Container</dt>
+            <dd>{{ware.Container}}</dd>
+        </dl>
+    </div>
+    <div class="production panel panel-default">
+        <h2>Production</h2>
+        <div class="production-method" ng-repeat="production in ware.Productions">
+            <h3>Method: {{production.Method | json}}</h3>
+            <dl class="dl-horizontal">
+                <dt>Time</dt>
+                <dd>{{production.Time | number}}</dd>
+                <dt>Amount</dt>
+                <dd>{{production.Amount | number}}</dd>
+                <dt ng-if="production.Text.Valid">Info</dt>
+                <dd ng-if="production.Text.Valid">{{production.Text.String}}</dd>
+                <dt ng-if="production.Stat"><dfn title="Amount * Average Price">Production Value</dfn></dt>
+                <dd ng-if="production.Stat">{{production.Stat.ProductionValue | number}}</dd>
+                <dt ng-if="production.Stat"><dfn title="Production Value - Sum of Average Cost">Average Yield</dfn></dt>
+                <dd ng-if="production.Stat">{{production.Stat.AverageYield | number}}</dd>
+                <dt ng-if="production.Stat">Average Yield/h</dt>
+                <dd ng-if="production.Stat">{{production.Stat.AverageYieldPerH | number}}</dd>
+            </dl>
+            <table class="table" nf-if="production.Wares">
+                <thead>
+                <tr>
+                    <th>Primary</th>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Amount</th>
+                    <th><dfn title="Average Price of Ware * Amount">Average Cost</dfn></th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="w in production.Wares" ng-class="w.Primary ? 'success' : ''">
+                        <td>{{w.Primary ? 'Y' : 'N'}}</td>
+                        <td><a href="/ware/{{w.Ware.Id}}">{{w.Ware.Id}}</a></td>
+                        <td ng-class="w.Ware.Name.Valid? '' : 'warning'"><a href="/ware/{{w.Ware.Id}}">{{w.Ware.Name.Valid? w.Ware.Name.String : '?'}}</a></td>
+                        <td class="number">{{w.Amount | number}}</td>
+                        <td class="number">{{w.AverageCost | number}}</td>
+                    </tr>
+                </tbody>
+                <tfoot ng-if="production.Stat">
+                    <tr>
+                        <td colspan="4"></td>
+                        <td class="number">{{production.Stat.TotalAverage | number}}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <p class="text-warning" ng-if="!ware.wareHasProduction()">No production info for this ware.</p>
+    </div>
+
+    <div class="ware-used-in panel panel-default" ng-if="ware.UsedIn">
+        <h2>Used in</h2>
+        <ul>
+            <li ng-repeat="w in ware.UsedIn" ng-if="w.Name.Valid"><a href="/ware/{{w.Id}}">{{ware.wareName(w)}}</a></li>
+        </ul>
+    </div>
+</div>
