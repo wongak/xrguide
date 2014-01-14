@@ -15,6 +15,9 @@ xrguide.
                 templateUrl: '/tmpl/stations.html',
                 controller: 'StationsListCtrl'
             }).
+            when('/station/:stationId', {
+                templateUrl: '/tmpl/station.html'
+            }).
             when('/', {
                 templateUrl: '/tmpl/index.html'
             });
