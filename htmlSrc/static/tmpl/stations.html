@@ -1,0 +1,51 @@
+<h1>Stations</h1>
+<div ng-controller="StationsListCtrl">
+<!--<form>
+    <div class="form-group">
+        <label for="wares-query">Search</label>
+        <input type="text" id="wares-query" ng-model="query" />
+    </div>
+    <div class="form-group">
+        <label for="wares-filter-internal">Hide internal wares</label>
+        <input type="checkbox" id="wares-filter-internal" ng-model="filterInternal" />
+    </div>
+    <div class="form-group">
+        <input type="checkbox" id="wares-show-equipment" ng-model="showTranspEquipment" />
+        <label for="wares-show-equipment">Equipment</label>
+        <input type="checkbox" id="wares-show-inventory" ng-model="showTranspInventory" />
+        <label for="wares-show-inventory">Inventory</label>
+        <input type="checkbox" id="wares-show-energy" ng-model="showTranspEnergy" />
+        <label for="wares-show-energy">Energy</label>
+        <input type="checkbox" id="wares-show-container" ng-model="showTranspContainer" />
+        <label for="wares-show-container">Container</label>
+        <input type="checkbox" id="wares-show-bulk" ng-model="showTranspBulk" />
+        <label for="wares-show-bulk">Bulk</label>
+        <input type="checkbox" id="wares-show-liquid" ng-model="showTranspLiquid" />
+        <label for="wares-show-liquid">Liquid</label>
+        <input type="checkbox" id="wares-show-fuel" ng-model="showTranspFuel" />
+        <label for="wares-show-fuel">Fuel</label>
+    </div>
+</form>-->
+<table class="table table-bordered">
+    <thead>
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Produces</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="station in stations | orderBy:order">
+        <td><a href="/station/{{station.Id}}">{{station.Id}}</a></td>
+        <td>
+        <a href="/station/{{station.Id}}">{{station.name}}</a>
+        </td>
+        <td>
+            <ul ng-if="station.ProducedWares.length">
+                <li ng-repeat="ware in station.ProducedWares"><a href="/ware/{{ware.Id}}">{{getName(ware)}}</a></li>
+            </ul>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</div>

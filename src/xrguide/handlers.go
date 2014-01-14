@@ -106,6 +106,8 @@ func languageCookie(r *http.Request, w http.ResponseWriter, c *content.XRGuideCo
 	ctx.Next()
 }
 
+// Return the set language from the content object
+// or return an error
 func contentLanguage(c *content.XRGuideContent) (lang *language.Language, err error) {
 	lEntry, ok := c.Data["lang"]
 	if !ok {

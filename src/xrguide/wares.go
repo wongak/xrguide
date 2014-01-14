@@ -19,6 +19,12 @@ type WaresHandler struct {
 	s *Server
 }
 
+func NewWaresHandler(s *Server) *WaresHandler {
+	h := &WaresHandler{s}
+	h.registerRoutes()
+	return h
+}
+
 func (w *WaresHandler) registerRoutes() {
 	w.s.Get("/wares", w.GetWares)
 	w.s.Get("/ware/:id", w.GetWare)
@@ -61,12 +67,6 @@ func (w *WaresHandler) GetWares(
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
-}
-
-func NewWaresHandler(s *Server) *WaresHandler {
-	h := &WaresHandler{s}
-	h.registerRoutes()
-	return h
 }
 
 func (w *WaresHandler) GetWare(

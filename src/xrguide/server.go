@@ -19,7 +19,8 @@ type Server struct {
 
 	htmlSrcDir string
 
-	wares *WaresHandler
+	wares    *WaresHandler
+	stations *StationsHandler
 }
 
 func NewServer(db *sql.DB, htmlSrcDir string) (*Server, error) {
@@ -42,6 +43,7 @@ func NewServer(db *sql.DB, htmlSrcDir string) (*Server, error) {
 		htmlSrcDir: htmlSrcDir,
 	}
 	s.wares = NewWaresHandler(s)
+	s.stations = NewStationsHandler(s)
 	err := s.initDefaults()
 	if err != nil {
 		return nil, fmt.Errorf("Error initializing server: %v", err)

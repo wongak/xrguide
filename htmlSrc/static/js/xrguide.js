@@ -11,32 +11,89 @@ xrguide.
                 templateUrl: '/tmpl/ware.html',
                 controller: 'WareDetailCtrl'
             }).
+            when('/stations', {
+                templateUrl: '/tmpl/stations.html',
+                controller: 'StationsListCtrl'
+            }).
             when('/', {
                 templateUrl: '/tmpl/index.html'
             });
         $locationProvider.html5Mode(true);
     });
 
-xrguide.service('Ware', ['$rootScope', '$http', function ($rootScope, $http) {
+xrguide.service('XRGuide', ['$rootScope', '$http', function ($rootScope, $http) {
     'use strict';
-    var wares,
+    var wares = [],
+        stations = {},
         service,
-        wareDefaults;
+        getName,
+        wareDefaults,
+        stationDefaults;
 
-    wares = [];
-    wareDefaults = {
-        wareName: function (ware) {
-            if (ware === undefined) {
-                ware = this;
+    service = {
+        getName: function (entity) {
+            if (entity === undefined) {
+                entity = this;
             }
-            if (ware.Name.Valid !== undefined && ware.Name.Valid) {
-                return ware.Name.String;
+            if (entity.Name !== undefined && entity.Name.Valid !== undefined && entity.Name.Valid) {
+                return entity.Name.String;
             }
-            if (ware.NameRaw.Valid !== undefined && ware.NameRaw.Valid) {
-                return ware.NameRaw.String;
+            if (entity.NameRaw !== undefined && entity.NameRaw.Valid !== undefined && entity.NameRaw.Valid) {
+                return entity.NameRaw.String;
             }
             return '?';
         },
+
+        wares: function () {
+            return wares;
+        },
+
+        updateWares: function ($scope) {
+            $http({
+                method: 'GET',
+                url: '/wares',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).success(function (data) {
+                wares = angular.extend(data, wareDefaults);
+                $scope.wares = wares;
+                $rootScope.$broadcast('wares.update');
+            });
+        },
+
+        getWare: function (wareId, $scope) {
+            $http({
+                method: 'GET',
+                url: '/ware/' + wareId,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).success(function (data) {
+                $scope.ware = angular.extend(data, wareDefaults);
+                $scope.$broadcast('ware.update');
+            });
+        },
+
+        updateStations: function ($scope) {
+            $http({
+                method: 'GET',
+                url: '/stations',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).success(function (data) {
+                stations = angular.extend(data, stationDefaults);
+                angular.forEach(stations, function (station) {
+                    station.name = service.getName(station);
+                });
+                $scope.stations = stations;
+                $rootScope.$broadcast('stations.update');
+            });
+        }
+    };
+    wareDefaults = {
+        wareName: service.getName,
 
         wareSpecialist: function (ware) {
             if (ware === undefined) {
@@ -58,36 +115,8 @@ xrguide.service('Ware', ['$rootScope', '$http', function ($rootScope, $http) {
             return true;
         }
     };
-    service = {
-        wares: function () {
-            return wares;
-        },
-
-        updateWares: function ($scope) {
-            $http({
-                method: 'GET',
-                url: '/wares',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }).success(function (data) {
-                $scope.wares = angular.extend(data, wareDefaults);
-                $rootScope.$broadcast('wares.update');
-            });
-        },
-
-        getWare: function (wareId, $scope) {
-            $http({
-                method: 'GET',
-                url: '/ware/' + wareId,
-                headers: {
-                    'Accept': 'application/json'
-                }
-            }).success(function (data) {
-                $scope.ware = angular.extend(data, wareDefaults);
-                $scope.$broadcast('ware.update');
-            });
-        }
+    stationDefaults = {
+        stationName: service.getName
     };
 
     return service;
@@ -96,16 +125,15 @@ xrguide.service('Ware', ['$rootScope', '$http', function ($rootScope, $http) {
 xrguide.directive('wareProduction', function () {
     return {
         restrict: 'E',
-        templateUrl: '/tmpl/wareProduction.html',
-
+        templateUrl: '/tmpl/wareProduction.html'
     };
 })
 
 var xrguideControllers = angular.module('xrguideControllers', []);
 
-xrguideControllers.controller('WaresListCtrl', ['Ware', '$scope', function (Ware, $scope) {
+xrguideControllers.controller('WaresListCtrl', ['XRGuide', '$scope', function (X, $scope) {
     'use strict';
-    Ware.updateWares($scope);
+    X.updateWares($scope);
 
     $scope.query = '';
     $scope.filterInternal = true;
@@ -163,7 +191,14 @@ xrguideControllers.controller('WaresListCtrl', ['Ware', '$scope', function (Ware
 //    $scope.$watch('wares.update', function () {});
 }]);
 
-xrguideControllers.controller('WareDetailCtrl', ['Ware', '$scope', '$routeParams', function (Ware, $scope, $routeParams) {
+xrguideControllers.controller('WareDetailCtrl', ['XRGuide', '$scope', '$routeParams', function (X, $scope, $routeParams) {
     'use strict';
-    Ware.getWare($routeParams.wareId, $scope);
+    X.getWare($routeParams.wareId, $scope);
+}]);
+
+xrguideControllers.controller('StationsListCtrl', ['XRGuide', '$scope', function (X, $scope) {
+    'use strict';
+    X.updateStations($scope);
+    $scope.order = 'name';
+    $scope.getName = X.getName;
 }]);
