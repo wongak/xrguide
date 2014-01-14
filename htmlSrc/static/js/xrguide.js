@@ -145,6 +145,8 @@ xrguideControllers.controller('WaresListCtrl', ['XRGuide', '$scope', function (X
     $scope.showTranspLiquid = true;
     $scope.showTranspFuel = true;
 
+    $scope.getName = X.getName;
+
     $scope.isInternal = function (ware) {
         if (ware.Name.Valid !== undefined && ware.Name.Valid) {
             return false;
@@ -187,13 +189,13 @@ xrguideControllers.controller('WaresListCtrl', ['XRGuide', '$scope', function (X
         }
         return true;
     };
-
-//    $scope.$watch('wares.update', function () {});
 }]);
 
 xrguideControllers.controller('WareDetailCtrl', ['XRGuide', '$scope', '$routeParams', function (X, $scope, $routeParams) {
     'use strict';
     X.getWare($routeParams.wareId, $scope);
+
+    $scope.getName = X.getName;
 }]);
 
 xrguideControllers.controller('StationsListCtrl', ['XRGuide', '$scope', function (X, $scope) {

@@ -75,7 +75,14 @@
     <div class="ware-used-in panel panel-default" ng-if="ware.UsedIn">
         <h2>Used in</h2>
         <ul>
-            <li ng-repeat="w in ware.UsedIn" ng-if="w.Name.Valid"><a href="/ware/{{w.Id}}">{{ware.wareName(w)}}</a></li>
+            <li ng-repeat="w in ware.UsedIn" ng-if="w.Name.Valid"><a href="/ware/{{w.Id}}">{{getName(w)}}</a></li>
+        </ul>
+    </div>
+
+    <div class="ware-produced-in panel panel-default" ng-if="ware.ProducedIn">
+        <h2>Produced in</h2>
+        <ul>
+            <li ng-repeat="station in ware.ProducedIn | orderBy:'Name.String'"><a href="/station/{{station.Id}}">{{getName(station)}} ({{station.Id}})</a></li>
         </ul>
     </div>
 </div>

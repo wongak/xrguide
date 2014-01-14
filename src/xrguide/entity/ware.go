@@ -23,6 +23,7 @@ type Ware struct {
 
 	Productions map[string]*Production `json:",omitempty"`
 	UsedIn      []*Ware                `json:",omitEmpty"`
+	ProducedIn  []*Station             `json:",omitempty"`
 }
 
 type Production struct {
@@ -140,6 +141,11 @@ func GetWare(db *sql.DB, languageId int64, wareId string) (*Ware, error) {
 			return nil, fmt.Errorf("Error scanning used in: %v", err)
 		}
 		ware.UsedIn = append(ware.UsedIn, used)
+	}
+	// produced in
+	ware.ProducedIn, err = WareStations(db, ware.Id, languageId)
+	if err != nil {
+		return nil, fmt.Errorf("Error on produced in: %v", err)
 	}
 	return ware, nil
 }

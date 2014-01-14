@@ -34,6 +34,9 @@ func StationsOverview(db *sql.DB, langId int64) ([]*Station, error) {
 		var wareName sql.NullString
 		station := new(Station)
 		err = rows.Scan(&station.Id, &station.Name, &wareId, &wareName)
+		if err != nil {
+			return nil, fmt.Errorf("Error on scan station: %v", err)
+		}
 		s, ok := stations[station.Id]
 		if ok {
 			station = s
@@ -54,6 +57,18 @@ func StationsOverview(db *sql.DB, langId int64) ([]*Station, error) {
 }
 
 func WareStations(db *sql.DB, wareId string, langId int64) ([]*Station, error) {
+	rows, err := db.Query(query.MacrosSelectWareStations, wareId, langId)
+	if err != nil {
+		return nil, fmt.Errorf("Error on query stations producing ware: %v", err)
+	}
 	stations := make([]*Station, 0)
+	for rows.Next() {
+		station := new(Station)
+		err = rows.Scan(&station.Id, &station.Name)
+		if err != nil {
+			return nil, fmt.Errorf("Error on scan station: %v", err)
+		}
+		stations = append(stations, station)
+	}
 	return stations, nil
 }

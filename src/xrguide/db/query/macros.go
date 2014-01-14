@@ -35,9 +35,7 @@ GROUP BY macros.id, wares.id
 const MacrosSelectWareStations = `
 SELECT
 	macros.id,
-	name_text.text,
-	wares.id,
-	ware_name_text.text
+	name_text.text
 FROM macros
 INNER JOIN macro_connections ON
 	macro_connections.macro_id = macros.id
@@ -55,12 +53,6 @@ LEFT JOIN text_entries AS name_text ON
 	name_text.page_id = macros.name_page_id
 	AND
 	name_text.text_id = macros.name_text_id
-LEFT JOIN text_entries AS ware_name_text ON
-	ware_name_text.language_id = ?
-	AND
-	ware_name_text.page_id = wares.name_page_id
-	AND
-	ware_name_text.text_id = wares.name_text_id
 WHERE
 	macros.class = 'station'
 GROUP BY macros.id
