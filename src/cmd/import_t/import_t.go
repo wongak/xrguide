@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mattn/go-sqlite3"
+	"html"
 	"io"
 	"log"
 	"os"
@@ -158,7 +159,8 @@ func read(database *importing.ImportDb, directory string, verbose bool, useLang,
 							log.Printf("Lang %d Page %d Text %d.", w.Lang.LangId, w.Page.Id, t.Id)
 						}
 						hasRef = text.HasRef(t.Entry)
-						_, err = stmt.Exec(w.Lang.LangId, w.Page.Id, t.Id, t.Entry, hasRef)
+						entry := html.UnescapeString(t.Entry)
+						_, err = stmt.Exec(w.Lang.LangId, w.Page.Id, t.Id, entry, hasRef)
 						if err != nil {
 							log.Panicf("Error on insert. Aborting: %v", err)
 						}
