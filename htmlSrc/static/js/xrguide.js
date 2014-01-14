@@ -199,6 +199,14 @@ xrguideControllers.controller('WareDetailCtrl', ['XRGuide', '$scope', '$routePar
 xrguideControllers.controller('StationsListCtrl', ['XRGuide', '$scope', function (X, $scope) {
     'use strict';
     X.updateStations($scope);
+    $scope.query = '';
     $scope.order = 'name';
     $scope.getName = X.getName;
+
+    $scope.search = function (station) {
+        if (!$scope.query) {
+            return 1;
+        }
+        return station.Id.toLowerCase().indexOf($scope.query.toLowerCase()) >= 0 || station.name.toLowerCase().indexOf($scope.query.toLowerCase()) >= 0;
+    };
 }]);
