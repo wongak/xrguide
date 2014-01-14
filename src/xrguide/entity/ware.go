@@ -1,4 +1,4 @@
-package ware
+package entity
 
 import (
 	"database/sql"

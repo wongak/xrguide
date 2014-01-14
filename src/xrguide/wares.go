@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 	"xrguide/content"
-	"xrguide/entity/ware"
+	"xrguide/entity"
 )
 
 var defaultOverviewOrder = func() string {
@@ -43,7 +43,7 @@ func (w *WaresHandler) GetWares(
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
-	wares, err := ware.WaresOverview(db, lang.Id, defaultOverviewOrder)
+	wares, err := entity.WaresOverview(db, lang.Id, defaultOverviewOrder)
 	if err != nil {
 		if isJsonRequest(r) {
 			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
@@ -88,7 +88,7 @@ func (w *WaresHandler) GetWare(
 		resp.WriteHeader(http.StatusNotFound)
 		return
 	}
-	ware, err := ware.GetWare(db, lang.Id, wareId)
+	ware, err := entity.GetWare(db, lang.Id, wareId)
 	if err != nil {
 		if isJsonRequest(r) {
 			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)

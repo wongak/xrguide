@@ -1,28 +1,27 @@
-package station
+package entity
 
 import (
 	"database/sql"
 	"fmt"
 	"xrguide/db/query"
-	"xrguide/entity/ware"
 )
 
 type Station struct {
 	Id   string
 	Name sql.NullString
 
-	ProducedWares []*ware.Ware
+	ProducedWares []*Ware
 }
 
-func (s *Station) addWare(w *ware.Ware) {
+func (s *Station) addWare(w *Ware) {
 	if s.ProducedWares == nil {
-		s.ProducedWares = make([]*ware.Ware, 0)
+		s.ProducedWares = make([]*Ware, 0)
 	}
 	s.ProducedWares = append(s.ProducedWares, w)
 }
 
 func StationsOverview(db *sql.DB, langId int64) ([]*Station, error) {
-	rows, err := db.Query(query.SelectStations, langId, langId)
+	rows, err := db.Query(query.MacrosSelectStations, langId, langId)
 	if err != nil {
 		return nil, fmt.Errorf("Error on query select stations: %v", err)
 	}
@@ -41,7 +40,7 @@ func StationsOverview(db *sql.DB, langId int64) ([]*Station, error) {
 		} else {
 			stations[station.Id] = station
 		}
-		ware := &ware.Ware{Id: wareId, Name: wareName}
+		ware := &Ware{Id: wareId, Name: wareName}
 		station.addWare(ware)
 	}
 	// then we create a slice out of the map
@@ -52,4 +51,9 @@ func StationsOverview(db *sql.DB, langId int64) ([]*Station, error) {
 		i++
 	}
 	return ret, nil
+}
+
+func WareStations(db *sql.DB, wareId string, langId int64) ([]*Station, error) {
+	stations := make([]*Station, 0)
+	return stations, nil
 }

@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 	"xrguide/content"
-	"xrguide/entity/station"
+	"xrguide/entity"
 )
 
 type StationsHandler struct {
@@ -37,7 +37,7 @@ func (s *StationsHandler) GetStations(
 		content.HandleError(err, l, tmpl, resp)
 		return
 	}
-	stations, err := station.StationsOverview(db, lang.Id)
+	stations, err := entity.StationsOverview(db, lang.Id)
 	if err != nil {
 		if isJsonRequest(r) {
 			content.HandleHttpError(err, http.StatusInternalServerError, l, resp)
