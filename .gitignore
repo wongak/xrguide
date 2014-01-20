@@ -6,6 +6,7 @@ resources
 **/*.exe
 src/cmd/import_t/import_t
 src/cmd/import_wares/import_wares
+src/cmd/import_macros/import_macros
 src/cmd/xrguide/xrguide
 # cfg
 src/cmd/xrguide/cfg/xrguide.cfg.json
